@@ -103,6 +103,7 @@ class TenantControllerTest {
         assertThatThrownBy(() -> controller.delete(99L)).isSameAs(boom);
     }
 
+
     @Test
     void create_propagatesServiceException() {
         CreateTenantRequest req = new CreateTenantRequest("Acme", "dup@example.com", "plaintext");
