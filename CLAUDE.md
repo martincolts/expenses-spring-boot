@@ -4,13 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-Fresh Spring Boot 4.0.6 skeleton (generated, not yet built out). Only `ExpensesApplication` exists — no controllers, entities, repositories, services, or migrations have been added yet. Treat new files as net-new design, not edits to existing patterns.
+Early-stage Spring Boot 4.0.6 project. Only `ExpensesApplication` exists on the Java side — no controllers, entities, services, or repositories yet. Schema is managed by Flyway with one migration so far ([V1__create_expense_table.sql](src/main/resources/db/migration/V1__create_expense_table.sql) — `expense` table). Treat new Java code as net-new design.
+
+## Project skills
+
+Project-level Claude skills live under [.claude/skills/](.claude/skills/). Consult them before making changes in their domains:
+
+- **create-migration** — Flyway conventions, file naming, immutability rule.
+- **spring-data-jdbc-patterns** — aggregate roots, why this is *not* JPA, mapping rules.
+- **spring-rest-controller** — DTOs, validation, `@RestControllerAdvice` + `ProblemDetail`.
+- **spring-test-slices** — choosing between `@WebMvcTest`, `@DataJdbcTest` (with Testcontainers, no H2), and `@SpringBootTest`.
+- **spring-configuration-properties** — `@ConfigurationProperties` records over `@Value`.
 
 ## Stack
 
 - **Java 26** (Gradle toolchain — auto-provisioned, no need to install manually)
 - **Spring Boot 4.0.6** with `spring-boot-starter-webmvc` (servlet stack) and `spring-boot-starter-data-jdbc` (Spring Data **JDBC**, not JPA — aggregate-root oriented, no lazy loading, no entity manager)
-- **PostgreSQL** as the runtime DB driver — `application.yaml` has no datasource configured yet, so the app will not start until `spring.datasource.*` is set
+- **PostgreSQL** at runtime; datasource URL/user/pass come from `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` env vars, defaulting to `localhost:5432/expenses` + `postgres`/`postgres` for local dev
+- **Flyway** for schema — migrations in [src/main/resources/db/migration/](src/main/resources/db/migration/), run automatically on context startup. `spring.sql.init.mode=never` is set to keep Flyway as the single source of schema truth
 - **Lombok** with annotation processor (both main and test)
 - **Spring Boot DevTools** (development-only auto-restart)
 
@@ -29,7 +40,8 @@ There is no separate lint/format task configured.
 
 ## Architecture notes for future work
 
-- **Spring Data JDBC, not JPA** — when adding persistence, use `@Table`, `@Id`, `CrudRepository`/`ListCrudRepository` from `org.springframework.data.repository`. Don't reach for `@Entity`, `EntityManager`, or JPA-specific annotations; they aren't on the classpath. Model relationships as aggregate roots referencing children, not bidirectional JPA associations.
+- **Spring Data JDBC, not JPA** — see the `spring-data-jdbc-patterns` skill for the full picture. Short version: aggregate-root repositories only, no lazy loading, references across aggregates use `AggregateReference`.
 - **Servlet web stack** (`spring-boot-starter-webmvc`), not WebFlux — controllers are blocking `@RestController` / `@Controller`.
-- **Test slices**: the project pulls in `spring-boot-starter-data-jdbc-test` and `spring-boot-starter-webmvc-test`, so prefer `@DataJdbcTest` and `@WebMvcTest` over full `@SpringBootTest` for fast, focused tests. The existing `ExpensesApplicationTests.contextLoads()` is the only full-context test and will require a working datasource (or test slice replacement) once DB config is added.
+- **Test slices**: prefer `@DataJdbcTest` (with Testcontainers Postgres — **not H2**) and `@WebMvcTest` over full `@SpringBootTest`. See the `spring-test-slices` skill. The existing `ExpensesApplicationTests.contextLoads()` will need a reachable Postgres (or Testcontainers wiring) to pass now that Flyway is enabled.
+- **Schema is SQL, not derived** — never let any tool generate DDL. All schema goes through Flyway migrations; see the `create-migration` skill.
 - **Base package** is `com.tincho.expenses` — keep new packages under it so component scanning picks them up automatically.
