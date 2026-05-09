@@ -28,7 +28,10 @@ Project-level Claude skills live under [.claude/skills/](.claude/skills/). Consu
 ## Commands
 
 ```bash
-./gradlew bootRun                                    # run the app
+docker compose up -d                                 # start local Postgres (reads .env)
+docker compose down                                  # stop, keep volume
+docker compose down -v                               # stop and wipe data volume
+./gradlew bootRun                                    # run the app (needs Postgres up)
 ./gradlew build                                      # full build incl. tests
 ./gradlew test                                       # run all tests
 ./gradlew test --tests ExpensesApplicationTests      # run a single test class
@@ -37,6 +40,10 @@ Project-level Claude skills live under [.claude/skills/](.claude/skills/). Consu
 ```
 
 There is no separate lint/format task configured.
+
+## Local database
+
+[docker-compose.yaml](docker-compose.yaml) runs Postgres 16 with credentials from `.env` (gitignored; mirror in [.env.example](.env.example)). The defaults in `.env` match the defaults in [application.yaml](src/main/resources/application.yaml) (`postgres`/`postgres`, db `expenses`), so `docker compose up -d && ./gradlew bootRun` works out of the box. Production deploys will use different credentials injected via `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` env vars — do **not** put production credentials in `.env`.
 
 ## Architecture notes for future work
 
