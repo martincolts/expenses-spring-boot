@@ -17,6 +17,8 @@ CREATE TABLE category (
 
 CREATE INDEX idx_category_tenant ON category (tenant_id);
 
+CREATE TYPE expense_status AS ENUM ('PAID', 'NOT_PAUD_YET');
+
 CREATE TABLE expense (
     id           BIGSERIAL PRIMARY KEY,
     tenant_id    BIGINT                   NOT NULL REFERENCES tenant (id),
@@ -24,8 +26,10 @@ CREATE TABLE expense (
     description  VARCHAR(255)             NOT NULL,
     amount       NUMERIC(12, 2)           NOT NULL,
     currency     CHAR(3)                  NOT NULL,
+    status       expense_status           NOT NULL DEFAULT 'NOT_PAUD_YET',
     incurred_at  TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    paid_at      TIMESTAMP WITH TIME ZONE
 );
 
 CREATE INDEX idx_expense_incurred_at  ON expense (incurred_at);

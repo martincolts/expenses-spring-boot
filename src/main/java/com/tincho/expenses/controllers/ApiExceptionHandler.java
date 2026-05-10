@@ -1,5 +1,7 @@
 package com.tincho.expenses.controllers;
 
+import com.tincho.expenses.services.CategoryNameAlreadyExistsException;
+import com.tincho.expenses.services.CategoryNotFoundException;
 import com.tincho.expenses.services.InvalidCurrentPasswordException;
 import com.tincho.expenses.services.TenantEmailAlreadyExistsException;
 import com.tincho.expenses.services.TenantNotFoundException;
@@ -25,6 +27,16 @@ class ApiExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(CategoryNotFoundException.class)
+    ProblemDetail categoryNotFound(CategoryNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(CategoryNameAlreadyExistsException.class)
+    ProblemDetail categoryConflict(CategoryNameAlreadyExistsException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ProblemDetail validation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
@@ -40,7 +52,7 @@ class ApiExceptionHandler {
 
     @ExceptionHandler(InvalidCurrentPasswordException.class)
     ProblemDetail invalidCurrentPassword(InvalidCurrentPasswordException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)

@@ -174,7 +174,7 @@ class TenantIntegrationTest {
                 .header("Authorization", "Bearer " + token)
                 .body(new ResetPasswordRequest("wrongpass1", "newpass12"))
                 .exchange()
-                .expectStatus().isEqualTo(422);
+                .expectStatus().isEqualTo(400);
     }
 
     @Test
