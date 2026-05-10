@@ -32,6 +32,8 @@ The app starts on `http://localhost:8080`. Flyway runs migrations automatically 
 | `JWT_SECRET` | *(dev placeholder)* | HS256 signing key — **must be overridden in production** |
 | `JWT_EXPIRATION_MS` | `86400000` | Token lifetime in milliseconds (default: 24 h) |
 
+> **Postgres ENUM note:** the default `DB_URL` includes `?stringtype=unspecified`. This is required so the JDBC driver can bind text parameters to the `expense_status` enum column. If you set `DB_URL` yourself (locally or in production), keep that query parameter. See [.claude/skills/postgres-enum-mapping](.claude/skills/postgres-enum-mapping/SKILL.md) for the full rationale.
+
 ### Running tests
 
 ```bash
@@ -602,6 +604,287 @@ curl -s -X DELETE http://localhost:8080/api/categories/1 \
 |---|---|
 | `401` | Missing or invalid token |
 | `404` | Category not found, or owned by a different tenant |
+
+---
+
+### Expenses
+
+Expenses belong to a tenant and must reference one of that tenant's categories. An expense is created either as already paid (`status = PAID`, `paidAt` set) or as pending (`status = NOT_PAUD_YET`, `paidAt = null`); a pending expense can later be moved to paid via the dedicated endpoint.
+
+> The `NOT_PAUD_YET` literal is a typo carried over from the `expense_status` Postgres enum in `V1__create_expense_table.sql`. Migrations are immutable, so the value is preserved as-is — both in the DB and in the API.
+
+#### Create expense
+
+```
+POST /api/expenses
+```
+
+Creates an expense owned by the authenticated tenant. The `tenantId` is taken from the JWT and cannot be supplied in the body. The referenced `categoryId` must belong to the same tenant.
+
+**Required role:** `TENANT`
+
+**Request body**
+
+```json
+{
+  "categoryId": 1,
+  "description": "Lunch with client",
+  "amount": 42.50,
+  "currency": "USD",
+  "incurredAt": "2026-05-09T13:00:00Z",
+  "paid": true
+}
+```
+
+| Field | Type | Constraints |
+|---|---|---|
+| `categoryId` | number | required; must reference a category owned by the caller |
+| `description` | string | required, max 255 chars |
+| `amount` | number | required, positive, up to 2 decimal places |
+| `currency` | string | required, exactly 3 chars (ISO 4217); normalized to upper-case |
+| `incurredAt` | string (ISO 8601) | required |
+| `paid` | boolean | optional (default `false`); when `true`, status is `PAID` and `paidAt` is set to the server time |
+
+**Response — `201 Created`**
+
+```json
+{
+  "id": 1,
+  "tenantId": 1,
+  "categoryId": 1,
+  "description": "Lunch with client",
+  "amount": 42.50,
+  "currency": "USD",
+  "status": "PAID",
+  "incurredAt": "2026-05-09T13:00:00Z",
+  "createdAt": "2026-05-10T12:00:00Z",
+  "paidAt": "2026-05-10T12:00:00Z"
+}
+```
+
+**Example**
+
+```bash
+curl -s -X POST http://localhost:8080/api/expenses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"categoryId":1,"description":"Lunch with client","amount":42.50,"currency":"USD","incurredAt":"2026-05-09T13:00:00Z","paid":true}'
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `400` | Validation failed |
+| `401` | Missing or invalid token |
+| `403` | Caller is not a tenant |
+| `404` | `categoryId` does not exist or is owned by a different tenant |
+
+---
+
+#### List expenses
+
+```
+GET /api/expenses
+```
+
+Lists expenses ordered by `incurredAt` (newest first). A `TENANT` sees only their own expenses; an `ADMIN` sees all expenses across every tenant.
+
+**Required role:** `TENANT` or `ADMIN`
+
+**Response — `200 OK`**
+
+```json
+[
+  {
+    "id": 1,
+    "tenantId": 1,
+    "categoryId": 1,
+    "description": "Lunch with client",
+    "amount": 42.50,
+    "currency": "USD",
+    "status": "PAID",
+    "incurredAt": "2026-05-09T13:00:00Z",
+    "createdAt": "2026-05-10T12:00:00Z",
+    "paidAt": "2026-05-10T12:00:00Z"
+  }
+]
+```
+
+**Example**
+
+```bash
+curl -s http://localhost:8080/api/expenses \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `401` | Missing or invalid token |
+
+---
+
+#### Get expense
+
+```
+GET /api/expenses/{id}
+```
+
+**Required role:** `ADMIN`, or `TENANT` accessing one of their own expenses.
+
+**Response — `200 OK`** (same shape as in the list response)
+
+**Example**
+
+```bash
+curl -s http://localhost:8080/api/expenses/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `401` | Missing or invalid token |
+| `404` | Expense not found, or owned by a different tenant |
+
+---
+
+#### Update expense
+
+```
+PUT /api/expenses/{id}
+```
+
+Updates the editable fields of an expense. Status and `paidAt` are not changed by this endpoint — use `POST /api/expenses/{id}/pay` to flip status.
+
+**Required role:** `TENANT`, and the expense must belong to the caller. The new `categoryId` must also belong to the caller.
+
+**Request body**
+
+```json
+{
+  "categoryId": 2,
+  "description": "Lunch with client (corrected)",
+  "amount": 45.00,
+  "currency": "USD",
+  "incurredAt": "2026-05-09T13:00:00Z"
+}
+```
+
+| Field | Type | Constraints |
+|---|---|---|
+| `categoryId` | number | required; must reference a category owned by the caller |
+| `description` | string | required, max 255 chars |
+| `amount` | number | required, positive |
+| `currency` | string | required, exactly 3 chars |
+| `incurredAt` | string (ISO 8601) | required |
+
+**Response — `200 OK`** (full expense, same shape as create)
+
+**Example**
+
+```bash
+curl -s -X PUT http://localhost:8080/api/expenses/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"categoryId":2,"description":"Lunch with client (corrected)","amount":45.00,"currency":"USD","incurredAt":"2026-05-09T13:00:00Z"}'
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `400` | Validation failed |
+| `401` | Missing or invalid token |
+| `403` | Caller is not a tenant |
+| `404` | Expense not found, or `categoryId` not owned by the caller |
+
+---
+
+#### Mark expense as paid
+
+```
+POST /api/expenses/{id}/pay
+```
+
+Transitions a pending expense to `PAID` and stamps `paidAt` with the current server time. Idempotency is **not** silent — calling this on an already-paid expense returns `409`.
+
+**Required role:** `ADMIN`, or `TENANT` paying one of their own expenses.
+
+**Response — `200 OK`** (full expense, with `status = "PAID"` and `paidAt` set)
+
+**Example**
+
+```bash
+curl -s -X POST http://localhost:8080/api/expenses/1/pay \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `401` | Missing or invalid token |
+| `404` | Expense not found, or owned by a different tenant |
+| `409` | Expense is already paid |
+
+---
+
+#### Mark expense as unpaid
+
+```
+POST /api/expenses/{id}/unpay
+```
+
+Reverts a paid expense back to `NOT_PAUD_YET` and clears `paidAt`. Calling this on an expense that is already not paid returns `409`.
+
+**Required role:** `ADMIN`, or `TENANT` reverting one of their own expenses.
+
+**Response — `200 OK`** (full expense, with `status = "NOT_PAUD_YET"` and `paidAt = null`)
+
+**Example**
+
+```bash
+curl -s -X POST http://localhost:8080/api/expenses/1/unpay \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `401` | Missing or invalid token |
+| `404` | Expense not found, or owned by a different tenant |
+| `409` | Expense is not currently paid |
+
+---
+
+#### Delete expense
+
+```
+DELETE /api/expenses/{id}
+```
+
+**Required role:** `ADMIN`, or `TENANT` deleting one of their own expenses.
+
+**Response — `204 No Content`**
+
+**Example**
+
+```bash
+curl -s -X DELETE http://localhost:8080/api/expenses/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `401` | Missing or invalid token |
+| `404` | Expense not found, or owned by a different tenant |
 
 ---
 
