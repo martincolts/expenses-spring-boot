@@ -2,6 +2,8 @@ package com.tincho.expenses.services;
 
 import com.tincho.expenses.controllers.dto.CreateCategoryRequest;
 import com.tincho.expenses.controllers.dto.UpdateCategoryRequest;
+import com.tincho.expenses.exceptions.CategoryNameAlreadyExistsException;
+import com.tincho.expenses.exceptions.CategoryNotFoundException;
 import com.tincho.expenses.model.Category;
 import com.tincho.expenses.model.Tenant;
 import com.tincho.expenses.repositories.CategoryRepository;

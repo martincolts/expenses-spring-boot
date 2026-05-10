@@ -1,10 +1,10 @@
 package com.tincho.expenses.controllers;
 
-import com.tincho.expenses.services.CategoryNameAlreadyExistsException;
-import com.tincho.expenses.services.CategoryNotFoundException;
-import com.tincho.expenses.services.InvalidCurrentPasswordException;
-import com.tincho.expenses.services.TenantEmailAlreadyExistsException;
-import com.tincho.expenses.services.TenantNotFoundException;
+import com.tincho.expenses.exceptions.CategoryNameAlreadyExistsException;
+import com.tincho.expenses.exceptions.CategoryNotFoundException;
+import com.tincho.expenses.exceptions.InvalidCurrentPasswordException;
+import com.tincho.expenses.exceptions.TenantEmailAlreadyExistsException;
+import com.tincho.expenses.exceptions.TenantNotFoundException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
