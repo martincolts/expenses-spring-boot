@@ -2,6 +2,9 @@ package com.tincho.expenses.controllers;
 
 import com.tincho.expenses.exceptions.CategoryNameAlreadyExistsException;
 import com.tincho.expenses.exceptions.CategoryNotFoundException;
+import com.tincho.expenses.exceptions.ExpenseAlreadyPaidException;
+import com.tincho.expenses.exceptions.ExpenseNotFoundException;
+import com.tincho.expenses.exceptions.ExpenseNotPaidException;
 import com.tincho.expenses.exceptions.InvalidCurrentPasswordException;
 import com.tincho.expenses.exceptions.TenantEmailAlreadyExistsException;
 import com.tincho.expenses.exceptions.TenantNotFoundException;
@@ -34,6 +37,21 @@ class ApiExceptionHandler {
 
     @ExceptionHandler(CategoryNameAlreadyExistsException.class)
     ProblemDetail categoryConflict(CategoryNameAlreadyExistsException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(ExpenseNotFoundException.class)
+    ProblemDetail expenseNotFound(ExpenseNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(ExpenseAlreadyPaidException.class)
+    ProblemDetail expenseAlreadyPaid(ExpenseAlreadyPaidException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(ExpenseNotPaidException.class)
+    ProblemDetail expenseNotPaid(ExpenseNotPaidException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

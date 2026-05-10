@@ -2,7 +2,7 @@ spring:
   application:
     name: expenses
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/expenses}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/expenses?stringtype=unspecified}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
   sql:

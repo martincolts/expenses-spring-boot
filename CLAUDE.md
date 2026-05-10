@@ -15,6 +15,8 @@ Project-level Claude skills live under [.claude/skills/](.claude/skills/). Consu
 - **spring-rest-controller** — DTOs, validation, `@RestControllerAdvice` + `ProblemDetail`.
 - **spring-test-slices** — choosing between `@WebMvcTest`, `@DataJdbcTest` (with Testcontainers, no H2), and `@SpringBootTest`.
 - **spring-configuration-properties** — `@ConfigurationProperties` records over `@Value`.
+- **exception-conventions** — custom exceptions live in `com.tincho.expenses.exceptions`; every one is wired through `ApiExceptionHandler`.
+- **postgres-enum-mapping** — Postgres native ENUM + Spring Data JDBC requires `?stringtype=unspecified` in the JDBC URL; Java enum constants must match SQL literals exactly.
 
 ## Stack
 
