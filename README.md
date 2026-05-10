@@ -395,6 +395,216 @@ curl -s -X DELETE http://localhost:8080/api/tenants/1 \
 
 ---
 
+### Categories
+
+Categories belong to a tenant. Each `(tenant_id, name)` pair must be unique, and a `TENANT` only sees and manages their own categories. All endpoints require a valid JWT.
+
+#### Create category
+
+```
+POST /api/categories
+```
+
+Creates a category owned by the authenticated tenant. The `tenant_id` is taken from the JWT — it cannot be set in the request body.
+
+**Required role:** `TENANT`
+
+**Request body**
+
+```json
+{
+  "name": "Food"
+}
+```
+
+| Field | Type | Constraints |
+|---|---|---|
+| `name` | string | required, max 50 chars |
+
+**Response — `201 Created`**
+
+```json
+{
+  "id": 1,
+  "tenantId": 1,
+  "name": "Food",
+  "createdAt": "2026-05-10T12:00:00Z"
+}
+```
+
+**Example**
+
+```bash
+curl -s -X POST http://localhost:8080/api/categories \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"name":"Food"}'
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `400` | Validation failed |
+| `401` | Missing or invalid token |
+| `403` | Caller is not a tenant (e.g. admins cannot create categories) |
+| `409` | Category name already exists for this tenant |
+
+---
+
+#### List categories
+
+```
+GET /api/categories
+```
+
+Lists categories visible to the caller. A `TENANT` sees only their own categories; an `ADMIN` sees all categories across every tenant.
+
+**Required role:** `TENANT` or `ADMIN`
+
+**Response — `200 OK`**
+
+```json
+[
+  {
+    "id": 1,
+    "tenantId": 1,
+    "name": "Food",
+    "createdAt": "2026-05-10T12:00:00Z"
+  }
+]
+```
+
+**Example**
+
+```bash
+curl -s http://localhost:8080/api/categories \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `401` | Missing or invalid token |
+
+---
+
+#### Get category
+
+```
+GET /api/categories/{id}
+```
+
+**Required role:** `ADMIN`, or `TENANT` accessing one of their own categories.
+
+**Response — `200 OK`**
+
+```json
+{
+  "id": 1,
+  "tenantId": 1,
+  "name": "Food",
+  "createdAt": "2026-05-10T12:00:00Z"
+}
+```
+
+**Example**
+
+```bash
+curl -s http://localhost:8080/api/categories/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `401` | Missing or invalid token |
+| `404` | Category not found, or owned by a different tenant |
+
+---
+
+#### Update category
+
+```
+PUT /api/categories/{id}
+```
+
+Renames a category. The owning tenant cannot be changed.
+
+**Required role:** `TENANT`, and the category must belong to the caller.
+
+**Request body**
+
+```json
+{
+  "name": "Groceries"
+}
+```
+
+| Field | Type | Constraints |
+|---|---|---|
+| `name` | string | required, max 50 chars |
+
+**Response — `200 OK`**
+
+```json
+{
+  "id": 1,
+  "tenantId": 1,
+  "name": "Groceries",
+  "createdAt": "2026-05-10T12:00:00Z"
+}
+```
+
+**Example**
+
+```bash
+curl -s -X PUT http://localhost:8080/api/categories/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"name":"Groceries"}'
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `400` | Validation failed |
+| `401` | Missing or invalid token |
+| `403` | Caller is not a tenant |
+| `404` | Category not found, or owned by a different tenant |
+| `409` | New name already exists for this tenant |
+
+---
+
+#### Delete category
+
+```
+DELETE /api/categories/{id}
+```
+
+**Required role:** `ADMIN`, or `TENANT` deleting one of their own categories.
+
+**Response — `204 No Content`**
+
+**Example**
+
+```bash
+curl -s -X DELETE http://localhost:8080/api/categories/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `401` | Missing or invalid token |
+| `404` | Category not found, or owned by a different tenant |
+
+---
+
 ## Error format
 
 All errors use [RFC 7807 Problem Detail](https://www.rfc-editor.org/rfc/rfc7807):

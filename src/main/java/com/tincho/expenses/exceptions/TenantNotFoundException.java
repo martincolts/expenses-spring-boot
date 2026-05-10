@@ -1,4 +1,4 @@
-package com.tincho.expenses.services;
+package com.tincho.expenses.exceptions;
 
 public class TenantNotFoundException extends RuntimeException {
 

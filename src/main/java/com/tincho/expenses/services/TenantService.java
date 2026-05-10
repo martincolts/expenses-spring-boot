@@ -2,6 +2,8 @@ package com.tincho.expenses.services;
 
 import com.tincho.expenses.controllers.dto.CreateTenantRequest;
 import com.tincho.expenses.controllers.dto.UpdateTenantRequest;
+import com.tincho.expenses.exceptions.TenantEmailAlreadyExistsException;
+import com.tincho.expenses.exceptions.TenantNotFoundException;
 import com.tincho.expenses.model.Tenant;
 import com.tincho.expenses.repositories.TenantRepository;
 import java.time.OffsetDateTime;

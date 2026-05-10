@@ -9,6 +9,8 @@ import com.tincho.expenses.controllers.dto.CreateTenantRequest;
 import com.tincho.expenses.controllers.dto.LoginRequest;
 import com.tincho.expenses.controllers.dto.LoginResponse;
 import com.tincho.expenses.controllers.dto.ResetPasswordRequest;
+import com.tincho.expenses.exceptions.InvalidCurrentPasswordException;
+import com.tincho.expenses.exceptions.TenantNotFoundException;
 import com.tincho.expenses.model.Tenant;
 import com.tincho.expenses.repositories.TenantRepository;
 import com.tincho.expenses.security.JwtService;
