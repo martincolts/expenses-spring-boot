@@ -10,5 +10,6 @@ public record Tenant(
         String name,
         String email,
         String passwordHash,
+        String role,
         OffsetDateTime createdAt
 ) {}

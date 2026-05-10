@@ -28,6 +28,7 @@ public class TenantService {
                 req.name(),
                 req.email(),
                 passwordEncoder.encode(req.password()),
+                "TENANT",
                 OffsetDateTime.now()
         );
         return repository.save(tenant);
@@ -50,6 +51,7 @@ public class TenantService {
                 req.name(),
                 existing.email(),
                 existing.passwordHash(),
+                existing.role(),
                 existing.createdAt()
         );
         return repository.save(updated);

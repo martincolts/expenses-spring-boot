@@ -35,14 +35,14 @@ class TenantServiceTest {
     TenantService service;
 
     @Test
-    void create_persistsTenant_withEncodedPassword() {
+    void create_persistsTenant_withEncodedPasswordAndTenantRole() {
         CreateTenantRequest req = new CreateTenantRequest("Acme", "new@example.com", "plaintext");
         given(repository.existsByEmail("new@example.com")).willReturn(false);
         given(passwordEncoder.encode("plaintext")).willReturn("encoded-hash");
         given(repository.save(any(Tenant.class)))
                 .willAnswer(inv -> {
                     Tenant t = inv.getArgument(0);
-                    return new Tenant(1L, t.name(), t.email(), t.passwordHash(), t.createdAt());
+                    return new Tenant(1L, t.name(), t.email(), t.passwordHash(), t.role(), t.createdAt());
                 });
 
         Tenant created = service.create(req);
@@ -54,6 +54,7 @@ class TenantServiceTest {
         assertThat(toSave.name()).isEqualTo("Acme");
         assertThat(toSave.email()).isEqualTo("new@example.com");
         assertThat(toSave.passwordHash()).isEqualTo("encoded-hash");
+        assertThat(toSave.role()).isEqualTo("TENANT");
         assertThat(toSave.createdAt()).isNotNull();
 
         assertThat(created.id()).isEqualTo(1L);
@@ -75,8 +76,8 @@ class TenantServiceTest {
 
     @Test
     void list_returnsRepositoryResults() {
-        Tenant a = new Tenant(1L, "A", "a@example.com", "h", OffsetDateTime.now());
-        Tenant b = new Tenant(2L, "B", "b@example.com", "h", OffsetDateTime.now());
+        Tenant a = new Tenant(1L, "A", "a@example.com", "h", "TENANT", OffsetDateTime.now());
+        Tenant b = new Tenant(2L, "B", "b@example.com", "h", "TENANT", OffsetDateTime.now());
         given(repository.findAll()).willReturn(List.of(a, b));
 
         assertThat(service.list()).containsExactly(a, b);
@@ -84,7 +85,7 @@ class TenantServiceTest {
 
     @Test
     void get_returnsTenant_whenFound() {
-        Tenant t = new Tenant(1L, "Acme", "a@example.com", "h", OffsetDateTime.now());
+        Tenant t = new Tenant(1L, "Acme", "a@example.com", "h", "TENANT", OffsetDateTime.now());
         given(repository.findById(1L)).willReturn(Optional.of(t));
 
         assertThat(service.get(1L)).isSameAs(t);
@@ -102,7 +103,7 @@ class TenantServiceTest {
     @Test
     void update_changesNameAndPreservesOtherFields() {
         OffsetDateTime createdAt = OffsetDateTime.now().minusDays(1);
-        Tenant existing = new Tenant(1L, "Old", "keep@example.com", "keep-hash", createdAt);
+        Tenant existing = new Tenant(1L, "Old", "keep@example.com", "keep-hash", "TENANT", createdAt);
         given(repository.findById(1L)).willReturn(Optional.of(existing));
         given(repository.save(any(Tenant.class))).willAnswer(inv -> inv.getArgument(0));
 
@@ -115,6 +116,7 @@ class TenantServiceTest {
         assertThat(toSave.name()).isEqualTo("New");
         assertThat(toSave.email()).isEqualTo("keep@example.com");
         assertThat(toSave.passwordHash()).isEqualTo("keep-hash");
+        assertThat(toSave.role()).isEqualTo("TENANT");
         assertThat(toSave.createdAt()).isEqualTo(createdAt);
 
         assertThat(updated.name()).isEqualTo("New");

@@ -37,7 +37,7 @@ class TenantRepositoryTest {
 
     @Test
     void save_assignsId() {
-        Tenant t = new Tenant(null, "Acme", "save@example.com", "hash", OffsetDateTime.now());
+        Tenant t = new Tenant(null, "Acme", "save@example.com", "hash", "TENANT", OffsetDateTime.now());
 
         Tenant saved = repository.save(t);
 
@@ -47,20 +47,21 @@ class TenantRepositoryTest {
     @Test
     void findById_returnsSavedTenant() {
         Tenant saved = repository.save(new Tenant(
-                null, "Acme", "findbyid@example.com", "hash", OffsetDateTime.now()));
+                null, "Acme", "findbyid@example.com", "hash", "TENANT", OffsetDateTime.now()));
 
         Tenant found = repository.findById(saved.id()).orElseThrow();
 
         assertThat(found.name()).isEqualTo("Acme");
         assertThat(found.email()).isEqualTo("findbyid@example.com");
         assertThat(found.passwordHash()).isEqualTo("hash");
+        assertThat(found.role()).isEqualTo("TENANT");
         assertThat(found.createdAt()).isNotNull();
     }
 
     @Test
     void findByEmail_returnsTenant_whenExists() {
         repository.save(new Tenant(
-                null, "Acme", "byemail@example.com", "hash", OffsetDateTime.now()));
+                null, "Acme", "byemail@example.com", "hash", "TENANT", OffsetDateTime.now()));
 
         assertThat(repository.findByEmail("byemail@example.com"))
                 .isPresent()
@@ -77,7 +78,7 @@ class TenantRepositoryTest {
     @Test
     void existsByEmail_isTrue_whenPresent() {
         repository.save(new Tenant(
-                null, "Acme", "exists@example.com", "hash", OffsetDateTime.now()));
+                null, "Acme", "exists@example.com", "hash", "TENANT", OffsetDateTime.now()));
 
         assertThat(repository.existsByEmail("exists@example.com")).isTrue();
     }
@@ -90,10 +91,10 @@ class TenantRepositoryTest {
     @Test
     void save_failsOnDuplicateEmail() {
         repository.save(new Tenant(
-                null, "First", "dup@example.com", "hash", OffsetDateTime.now()));
+                null, "First", "dup@example.com", "hash", "TENANT", OffsetDateTime.now()));
 
         Tenant second = new Tenant(
-                null, "Second", "dup@example.com", "hash", OffsetDateTime.now());
+                null, "Second", "dup@example.com", "hash", "TENANT", OffsetDateTime.now());
 
         assertThatThrownBy(() -> repository.save(second))
                 .isInstanceOf(DataAccessException.class);
