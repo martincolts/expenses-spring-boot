@@ -19,24 +19,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-class AuthController {
+public class AuthController {
 
     private final AuthService authService;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    LoginResponse register(@Valid @RequestBody CreateTenantRequest req) {
+    public LoginResponse register(@Valid @RequestBody CreateTenantRequest req) {
         return authService.register(req);
     }
 
     @PostMapping("/login")
-    LoginResponse login(@Valid @RequestBody LoginRequest req) {
+    public LoginResponse login(@Valid @RequestBody LoginRequest req) {
         return authService.login(req);
     }
 
     @PostMapping("/reset-password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void resetPassword(@Valid @RequestBody ResetPasswordRequest req,
+    public void resetPassword(@Valid @RequestBody ResetPasswordRequest req,
                        @AuthenticationPrincipal TenantUserDetails principal) {
         authService.resetPassword(principal.getUsername(), req);
     }

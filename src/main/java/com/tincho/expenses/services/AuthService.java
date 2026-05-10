@@ -1,5 +1,10 @@
 package com.tincho.expenses.services;
 
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tincho.expenses.controllers.dto.CreateTenantRequest;
 import com.tincho.expenses.controllers.dto.LoginRequest;
 import com.tincho.expenses.controllers.dto.LoginResponse;
@@ -8,11 +13,8 @@ import com.tincho.expenses.model.Tenant;
 import com.tincho.expenses.repositories.TenantRepository;
 import com.tincho.expenses.security.JwtService;
 import com.tincho.expenses.security.TenantUserDetails;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +25,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    @Transactional
     public LoginResponse register(CreateTenantRequest req) {
         Tenant saved = tenantService.create(req);
         TenantUserDetails userDetails = new TenantUserDetails(saved);
@@ -44,7 +45,7 @@ public class AuthService {
 
     @Transactional
     public void resetPassword(String email, ResetPasswordRequest req) {
-        Tenant tenant = tenantRepository.findByEmail(email)
+        Tenant tenant = tenantRepository.findByEmailForUpdate(email)
                 .orElseThrow(() -> new TenantNotFoundException(-1L));
         if (!passwordEncoder.matches(req.currentPassword(), tenant.passwordHash())) {
             throw new InvalidCurrentPasswordException();
