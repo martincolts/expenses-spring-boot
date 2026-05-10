@@ -31,6 +31,9 @@ The app starts on `http://localhost:8080`. Flyway runs migrations automatically 
 | `DB_PASSWORD` | `postgres` | Postgres password |
 | `JWT_SECRET` | *(dev placeholder)* | HS256 signing key — **must be overridden in production** |
 | `JWT_EXPIRATION_MS` | `86400000` | Token lifetime in milliseconds (default: 24 h) |
+| `ADMIN_NAME` | `Administrator` | Display name for the bootstrapped admin tenant |
+| `ADMIN_EMAIL` | `admin@example.com` | Email/login for the bootstrapped admin tenant — **must be overridden in production** |
+| `ADMIN_PASSWORD` | `adminpassword` | Password for the bootstrapped admin tenant — **must be overridden in production** |
 
 > **Postgres ENUM note:** the default `DB_URL` includes `?stringtype=unspecified`. This is required so the JDBC driver can bind text parameters to the `expense_status` enum column. If you set `DB_URL` yourself (locally or in production), keep that query parameter. See [.claude/skills/postgres-enum-mapping](.claude/skills/postgres-enum-mapping/SKILL.md) for the full rationale.
 
@@ -80,10 +83,10 @@ Tokens are returned by the `/api/auth/register` and `/api/auth/login` endpoints.
 
 | Role | Granted by |
 |---|---|
-| `TENANT` | Automatically assigned on registration |
-| `ADMIN` | Must be set manually in the database |
+| `TENANT` | Automatically assigned on registration. The public `POST /api/auth/register` endpoint always creates `TENANT` accounts — there is no way to obtain `ADMIN` through the API. |
+| `ADMIN` | Bootstrapped on application startup from the `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` environment variables. Idempotent: if a tenant with `ADMIN_EMAIL` already exists, the bootstrap is skipped (the existing record is left untouched). |
 
-To promote a user to admin, update the `role` column directly:
+To add additional admins after startup, update the `role` column directly:
 
 ```sql
 UPDATE tenant SET role = 'ADMIN' WHERE email = 'user@example.com';
