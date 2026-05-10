@@ -17,6 +17,7 @@ Project-level Claude skills live under [.claude/skills/](.claude/skills/). Consu
 - **spring-configuration-properties** — `@ConfigurationProperties` records over `@Value`.
 - **exception-conventions** — custom exceptions live in `com.tincho.expenses.exceptions`; every one is wired through `ApiExceptionHandler`.
 - **postgres-enum-mapping** — Postgres native ENUM + Spring Data JDBC requires `?stringtype=unspecified` in the JDBC URL; Java enum constants must match SQL literals exactly.
+- **readme-api-docs** — every change to the HTTP API surface (endpoints, DTOs, validation, roles, error statuses) must update the `## API Reference` section of [README.md](README.md) in the same change.
 
 ## Stack
 

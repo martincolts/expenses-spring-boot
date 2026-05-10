@@ -5,6 +5,7 @@ import com.tincho.expenses.exceptions.CategoryNotFoundException;
 import com.tincho.expenses.exceptions.ExpenseAlreadyPaidException;
 import com.tincho.expenses.exceptions.ExpenseNotFoundException;
 import com.tincho.expenses.exceptions.ExpenseNotPaidException;
+import com.tincho.expenses.exceptions.IncomeNotFoundException;
 import com.tincho.expenses.exceptions.InvalidCurrentPasswordException;
 import com.tincho.expenses.exceptions.TenantEmailAlreadyExistsException;
 import com.tincho.expenses.exceptions.TenantNotFoundException;
@@ -42,6 +43,11 @@ class ApiExceptionHandler {
 
     @ExceptionHandler(ExpenseNotFoundException.class)
     ProblemDetail expenseNotFound(ExpenseNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(IncomeNotFoundException.class)
+    ProblemDetail incomeNotFound(IncomeNotFoundException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 

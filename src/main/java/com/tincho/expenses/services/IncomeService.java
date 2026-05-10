@@ -1,0 +1,63 @@
+package com.tincho.expenses.services;
+
+import com.tincho.expenses.controllers.dto.CreateIncomeRequest;
+import com.tincho.expenses.exceptions.IncomeNotFoundException;
+import com.tincho.expenses.model.Income;
+import com.tincho.expenses.model.Tenant;
+import com.tincho.expenses.repositories.IncomeRepository;
+import java.time.OffsetDateTime;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.jdbc.core.mapping.AggregateReference;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class IncomeService {
+
+    private final IncomeRepository repository;
+
+    @Transactional
+    public Income create(Long tenantId, CreateIncomeRequest req) {
+        Income income = new Income(
+                null,
+                AggregateReference.<Tenant, Long>to(tenantId),
+                req.amount(),
+                OffsetDateTime.now()
+        );
+        return repository.save(income);
+    }
+
+    public List<Income> listForTenant(Long tenantId) {
+        return repository.findByTenantId(tenantId);
+    }
+
+    public List<Income> listAll() {
+        return repository.findAll();
+    }
+
+    public Income getForTenant(Long tenantId, Long id) {
+        return repository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new IncomeNotFoundException(id));
+    }
+
+    public Income get(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new IncomeNotFoundException(id));
+    }
+
+    @Transactional
+    public void deleteForTenant(Long tenantId, Long id) {
+        Income existing = getForTenant(tenantId, id);
+        repository.deleteById(existing.id());
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        if (!repository.existsById(id)) {
+            throw new IncomeNotFoundException(id);
+        }
+        repository.deleteById(id);
+    }
+}
