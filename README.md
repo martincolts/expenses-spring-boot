@@ -888,6 +888,152 @@ curl -s -X DELETE http://localhost:8080/api/expenses/1 \
 
 ---
 
+### Incomes
+
+Incomes belong to a tenant. Each income records an amount and the timestamp it was registered. A `TENANT` only sees and manages their own incomes; an `ADMIN` can list, read, and delete any income.
+
+#### Create income
+
+```
+POST /api/incomes
+```
+
+Creates an income owned by the authenticated tenant. The `tenantId` is taken from the JWT — it cannot be set in the request body. `createdAt` is stamped by the server.
+
+**Required role:** `TENANT`
+
+**Request body**
+
+```json
+{
+  "amount": 1500.00
+}
+```
+
+| Field | Type | Constraints |
+|---|---|---|
+| `amount` | number | required, positive, up to 2 decimal places |
+
+**Response — `201 Created`**
+
+```json
+{
+  "id": 1,
+  "tenantId": 1,
+  "amount": 1500.00,
+  "createdAt": "2026-05-10T12:00:00Z"
+}
+```
+
+**Example**
+
+```bash
+curl -s -X POST http://localhost:8080/api/incomes \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"amount":1500.00}'
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `400` | Validation failed (missing or non-positive amount) |
+| `401` | Missing or invalid token |
+| `403` | Caller is not a tenant (e.g. admins cannot create incomes) |
+
+---
+
+#### List incomes
+
+```
+GET /api/incomes
+```
+
+Lists incomes ordered by `createdAt` (newest first). A `TENANT` sees only their own incomes; an `ADMIN` sees all incomes across every tenant.
+
+**Required role:** `TENANT` or `ADMIN`
+
+**Response — `200 OK`**
+
+```json
+[
+  {
+    "id": 1,
+    "tenantId": 1,
+    "amount": 1500.00,
+    "createdAt": "2026-05-10T12:00:00Z"
+  }
+]
+```
+
+**Example**
+
+```bash
+curl -s http://localhost:8080/api/incomes \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `401` | Missing or invalid token |
+
+---
+
+#### Get income
+
+```
+GET /api/incomes/{id}
+```
+
+**Required role:** `ADMIN`, or `TENANT` accessing one of their own incomes.
+
+**Response — `200 OK`** (same shape as in the list response)
+
+**Example**
+
+```bash
+curl -s http://localhost:8080/api/incomes/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `401` | Missing or invalid token |
+| `404` | Income not found, or owned by a different tenant |
+
+---
+
+#### Delete income
+
+```
+DELETE /api/incomes/{id}
+```
+
+**Required role:** `ADMIN`, or `TENANT` deleting one of their own incomes.
+
+**Response — `204 No Content`**
+
+**Example**
+
+```bash
+curl -s -X DELETE http://localhost:8080/api/incomes/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `401` | Missing or invalid token |
+| `404` | Income not found, or owned by a different tenant |
+
+---
+
 ## Error format
 
 All errors use [RFC 7807 Problem Detail](https://www.rfc-editor.org/rfc/rfc7807):
