@@ -18,6 +18,8 @@ Project-level Claude skills live under [.claude/skills/](.claude/skills/). Consu
 - **exception-conventions** — custom exceptions live in `com.tincho.expenses.exceptions`; every one is wired through `ApiExceptionHandler`.
 - **postgres-enum-mapping** — Postgres native ENUM + Spring Data JDBC requires `?stringtype=unspecified` in the JDBC URL; Java enum constants must match SQL literals exactly.
 - **readme-api-docs** — every change to the HTTP API surface (endpoints, DTOs, validation, roles, error statuses) must update the `## API Reference` section of [README.md](README.md) in the same change.
+- **tanstack-query** — `useQuery` for GET/data fetching, `useMutation` for writes, cache invalidation patterns, query key conventions. Use whenever adding data fetching or form submission in the React frontend.
+- **formik** — `useFormik` + Yup schema validation + MUI TextField wiring. Use whenever adding any form to the React frontend.
 
 ## Stack
 

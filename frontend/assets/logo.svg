@@ -1,0 +1,71 @@
+<svg width="100%" viewBox="0 0 680 300" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>Spendly — personal expense tracker logo</title>
+  <desc>Refined logo for Spendly, a personal expense tracking app, featuring a bold icon mark with a wallet and upward trend, paired with clean wordmark typography.</desc>
+
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .icon-bg   { fill: #1a2e42; }
+      .icon-bg2  { fill: #223548; }
+      .wmark     { fill: #f0f4f8; }
+      .sub       { fill: #7a9ab5; }
+      .pill-bg   { fill: #1a2e42; stroke: #2a5a82; }
+      .pill-txt  { fill: #5aafdf; }
+      .divider   { stroke: #2a4a62; }
+    }
+    .icon-bg   { fill: #dceeff; }
+    .icon-bg2  { fill: #c2dcf5; }
+    .wmark     { fill: #0f2235; }
+    .sub       { fill: #5a8aaa; }
+    .pill-bg   { fill: #eaf5ff; stroke: #90c8ee; }
+    .pill-txt  { fill: #1a6fa8; }
+    .divider   { stroke: #c0d8ec; }
+  </style>
+
+  <g transform="translate(100, 48)">
+
+    <rect x="0" y="0" width="120" height="120" rx="28" class="icon-bg"/>
+
+    <rect x="18" y="32" width="84" height="58" rx="10" fill="#2a7ec8"/>
+
+    <rect x="18" y="32" width="84" height="20" rx="10" fill="#1a6ab8"/>
+    <rect x="18" y="42" width="84" height="10" fill="#1a6ab8"/>
+
+    <rect x="72" y="50" width="24" height="16" rx="6" fill="#5ab4f0" opacity="0.9"/>
+    <circle cx="80" cy="58" r="4" fill="#dceeff" opacity="0.9"/>
+    <circle cx="90" cy="58" r="4" fill="#1a5a9a" opacity="0.5"/>
+
+    <rect x="26" y="52" width="28" height="3" rx="1.5" fill="#9ad0f5" opacity="0.7"/>
+    <rect x="26" y="60" width="18" height="3" rx="1.5" fill="#9ad0f5" opacity="0.4"/>
+
+    <polyline points="22,86  36,76  50,81  64,68  78,71  94,58"
+      fill="none" stroke="#40e08a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="94" cy="58" r="4.5" fill="#40e08a"/>
+    <circle cx="64" cy="68" r="3"   fill="#40e08a" opacity="0.6"/>
+
+    <text x="140" y="64"
+      font-family="sans-serif" font-size="58" font-weight="500"
+      class="wmark" letter-spacing="-1">Spendly</text>
+
+    <line x1="140" y1="78" x2="468" y2="78" stroke-width="1" class="divider"/>
+
+    <text x="142" y="96"
+      font-family="sans-serif" font-size="14" font-weight="400"
+      class="sub" letter-spacing="2">PERSONAL EXPENSE TRACKER</text>
+
+    <rect x="140" y="112" width="82" height="22" rx="11" class="pill-bg" stroke-width="1"/>
+    <text x="181" y="127" text-anchor="middle"
+      font-family="sans-serif" font-size="12" font-weight="500"
+      class="pill-txt" letter-spacing="0.5">track</text>
+
+    <rect x="232" y="112" width="86" height="22" rx="11" class="pill-bg" stroke-width="1"/>
+    <text x="275" y="127" text-anchor="middle"
+      font-family="sans-serif" font-size="12" font-weight="500"
+      class="pill-txt" letter-spacing="0.5">budget</text>
+
+    <rect x="328" y="112" width="72" height="22" rx="11" class="pill-bg" stroke-width="1"/>
+    <text x="364" y="127" text-anchor="middle"
+      font-family="sans-serif" font-size="12" font-weight="500"
+      class="pill-txt" letter-spacing="0.5">save</text>
+
+  </g>
+</svg>

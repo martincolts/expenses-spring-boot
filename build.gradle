@@ -51,3 +51,19 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+task buildFrontend(type: Exec) {
+	workingDir 'frontend'
+	commandLine 'npm', 'run', 'build'
+	inputs.dir 'frontend/src'
+	inputs.files 'frontend/package.json', 'frontend/vite.config.ts', 'frontend/tsconfig.json'
+	outputs.dir 'frontend/dist'
+	onlyIf { gradle.taskGraph.hasTask(':bootJar') || gradle.taskGraph.hasTask(':bootRun') }
+}
+
+processResources {
+	dependsOn buildFrontend
+	from('frontend/dist') {
+		into 'static'
+	}
+}

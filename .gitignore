@@ -38,3 +38,7 @@ out/
 
 ### Local env ###
 .env
+
+### Frontend ###
+frontend/node_modules/
+frontend/dist/
