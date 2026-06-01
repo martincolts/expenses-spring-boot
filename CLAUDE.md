@@ -19,7 +19,9 @@ Project-level Claude skills live under [.claude/skills/](.claude/skills/). Consu
 - **postgres-enum-mapping** — Postgres native ENUM + Spring Data JDBC requires `?stringtype=unspecified` in the JDBC URL; Java enum constants must match SQL literals exactly.
 - **readme-api-docs** — every change to the HTTP API surface (endpoints, DTOs, validation, roles, error statuses) must update the `## API Reference` section of [README.md](README.md) in the same change.
 - **tanstack-query** — `useQuery` for GET/data fetching, `useMutation` for writes, cache invalidation patterns, query key conventions. Use whenever adding data fetching or form submission in the React frontend.
+- **fix-tests-after-backend-change** — checklist for updating all test files after any Java record, DTO, or service signature changes. Use whenever a constructor parameter is added, removed, or reordered.
 - **formik** — `useFormik` + Yup schema validation + MUI TextField wiring. Use whenever adding any form to the React frontend.
+- **responsive-mobile-first** — mobile-first layout rules, MUI breakpoint object syntax, responsive Grid2/Stack/Container patterns, table→card fallback. Use whenever adding or modifying any frontend component or page.
 
 ## Stack
 

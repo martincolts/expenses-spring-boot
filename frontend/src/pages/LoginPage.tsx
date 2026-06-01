@@ -30,9 +30,11 @@ export function LoginPage() {
       >
         <Box
           sx={{
-            background: 'linear-gradient(135deg, #1a6ab8 0%, #2a7ec8 100%)',
+            background: '#fff',
             borderRadius: '16px 16px 0 0',
-            p: 3,
+            px: 3,
+            pt: 3,
+            pb: 1,
             display: 'flex',
             justifyContent: 'center',
           }}
@@ -40,7 +42,7 @@ export function LoginPage() {
           <img
             src={logoUrl}
             alt="Spendly"
-            style={{ width: '100%', maxWidth: 300, filter: 'brightness(0) invert(1)' }}
+            style={{ width: '100%', maxWidth: 300 }}
           />
         </Box>
 

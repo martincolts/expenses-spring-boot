@@ -50,7 +50,7 @@ class CategoryRepositoryTest {
     void save_assignsId() {
         Long tenantId = createTenant("save@example.com");
         Category c = new Category(
-                null, AggregateReference.to(tenantId), "Food", OffsetDateTime.now());
+                null, AggregateReference.to(tenantId), "Food", null, null, OffsetDateTime.now());
 
         Category saved = repository.save(c);
 
@@ -61,7 +61,7 @@ class CategoryRepositoryTest {
     void findById_returnsSavedCategory() {
         Long tenantId = createTenant("findbyid@example.com");
         Category saved = repository.save(new Category(
-                null, AggregateReference.to(tenantId), "Travel", OffsetDateTime.now()));
+                null, AggregateReference.to(tenantId), "Travel", null, null, OffsetDateTime.now()));
 
         Category found = repository.findById(saved.id()).orElseThrow();
 
@@ -75,11 +75,11 @@ class CategoryRepositoryTest {
         Long tenantA = createTenant("tenant-a@example.com");
         Long tenantB = createTenant("tenant-b@example.com");
         repository.save(new Category(
-                null, AggregateReference.to(tenantA), "A-Food", OffsetDateTime.now()));
+                null, AggregateReference.to(tenantA), "A-Food", null, null, OffsetDateTime.now()));
         repository.save(new Category(
-                null, AggregateReference.to(tenantA), "A-Travel", OffsetDateTime.now()));
+                null, AggregateReference.to(tenantA), "A-Travel", null, null, OffsetDateTime.now()));
         repository.save(new Category(
-                null, AggregateReference.to(tenantB), "B-Food", OffsetDateTime.now()));
+                null, AggregateReference.to(tenantB), "B-Food", null, null, OffsetDateTime.now()));
 
         assertThat(repository.findByTenantId(tenantA))
                 .extracting(Category::name)
@@ -97,7 +97,7 @@ class CategoryRepositoryTest {
     void findByIdAndTenantId_returnsCategory_whenOwnedByTenant() {
         Long tenantId = createTenant("owner@example.com");
         Category saved = repository.save(new Category(
-                null, AggregateReference.to(tenantId), "Food", OffsetDateTime.now()));
+                null, AggregateReference.to(tenantId), "Food", null, null, OffsetDateTime.now()));
 
         assertThat(repository.findByIdAndTenantId(saved.id(), tenantId))
                 .isPresent()
@@ -111,7 +111,7 @@ class CategoryRepositoryTest {
         Long tenantA = createTenant("a@example.com");
         Long tenantB = createTenant("b@example.com");
         Category saved = repository.save(new Category(
-                null, AggregateReference.to(tenantA), "Food", OffsetDateTime.now()));
+                null, AggregateReference.to(tenantA), "Food", null, null, OffsetDateTime.now()));
 
         assertThat(repository.findByIdAndTenantId(saved.id(), tenantB)).isEmpty();
     }
@@ -120,7 +120,7 @@ class CategoryRepositoryTest {
     void existsByTenantIdAndName_isTrue_whenPresent() {
         Long tenantId = createTenant("exists@example.com");
         repository.save(new Category(
-                null, AggregateReference.to(tenantId), "Food", OffsetDateTime.now()));
+                null, AggregateReference.to(tenantId), "Food", null, null, OffsetDateTime.now()));
 
         assertThat(repository.existsByTenantIdAndName(tenantId, "Food")).isTrue();
     }
@@ -130,7 +130,7 @@ class CategoryRepositoryTest {
         Long tenantA = createTenant("a-other@example.com");
         Long tenantB = createTenant("b-other@example.com");
         repository.save(new Category(
-                null, AggregateReference.to(tenantA), "Food", OffsetDateTime.now()));
+                null, AggregateReference.to(tenantA), "Food", null, null, OffsetDateTime.now()));
 
         assertThat(repository.existsByTenantIdAndName(tenantB, "Food")).isFalse();
     }
@@ -139,10 +139,10 @@ class CategoryRepositoryTest {
     void save_failsOnDuplicateNameForSameTenant() {
         Long tenantId = createTenant("dup@example.com");
         repository.save(new Category(
-                null, AggregateReference.to(tenantId), "Food", OffsetDateTime.now()));
+                null, AggregateReference.to(tenantId), "Food", null, null, OffsetDateTime.now()));
 
         Category second = new Category(
-                null, AggregateReference.to(tenantId), "Food", OffsetDateTime.now());
+                null, AggregateReference.to(tenantId), "Food", null, null, OffsetDateTime.now());
 
         assertThatThrownBy(() -> repository.save(second))
                 .isInstanceOf(DataAccessException.class);

@@ -332,7 +332,7 @@ class ExpenseServiceTest {
 
     private void givenCategoryOwned(Long categoryId, Long tenantId) {
         Category c = new Category(
-                categoryId, AggregateReference.<Tenant, Long>to(tenantId), "Cat", OffsetDateTime.now());
+                categoryId, AggregateReference.<Tenant, Long>to(tenantId), "Cat", null, null, OffsetDateTime.now());
         given(categoryRepository.findByIdAndTenantId(categoryId, tenantId)).willReturn(Optional.of(c));
     }
 

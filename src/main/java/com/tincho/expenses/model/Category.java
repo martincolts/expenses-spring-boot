@@ -11,5 +11,7 @@ public record Category(
         @Id Long id,
         @Column("tenant_id") AggregateReference<Tenant, Long> tenant,
         String name,
+        String iconId,
+        String colorId,
         OffsetDateTime createdAt
 ) {}

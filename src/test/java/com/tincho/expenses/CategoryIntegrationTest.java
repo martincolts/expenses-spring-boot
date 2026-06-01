@@ -66,7 +66,7 @@ class CategoryIntegrationTest {
 
         CategoryResponse created = client.post().uri("/api/categories")
                 .header("Authorization", "Bearer " + login.token())
-                .body(new CreateCategoryRequest("Food"))
+                .body(new CreateCategoryRequest("Food", null, null))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(CategoryResponse.class)
@@ -88,13 +88,13 @@ class CategoryIntegrationTest {
 
         client.post().uri("/api/categories")
                 .header("Authorization", "Bearer " + login.token())
-                .body(new CreateCategoryRequest("Food"))
+                .body(new CreateCategoryRequest("Food", null, null))
                 .exchange()
                 .expectStatus().isCreated();
 
         client.post().uri("/api/categories")
                 .header("Authorization", "Bearer " + login.token())
-                .body(new CreateCategoryRequest("Food"))
+                .body(new CreateCategoryRequest("Food", null, null))
                 .exchange()
                 .expectStatus().isEqualTo(409)
                 .expectBody(String.class)
@@ -108,13 +108,13 @@ class CategoryIntegrationTest {
 
         client.post().uri("/api/categories")
                 .header("Authorization", "Bearer " + a.token())
-                .body(new CreateCategoryRequest("Food"))
+                .body(new CreateCategoryRequest("Food", null, null))
                 .exchange()
                 .expectStatus().isCreated();
 
         client.post().uri("/api/categories")
                 .header("Authorization", "Bearer " + b.token())
-                .body(new CreateCategoryRequest("Food"))
+                .body(new CreateCategoryRequest("Food", null, null))
                 .exchange()
                 .expectStatus().isCreated();
     }
@@ -125,7 +125,7 @@ class CategoryIntegrationTest {
 
         client.post().uri("/api/categories")
                 .header("Authorization", "Bearer " + login.token())
-                .body(new CreateCategoryRequest(""))
+                .body(new CreateCategoryRequest("", null, null))
                 .exchange()
                 .expectStatus().isBadRequest();
 
@@ -135,7 +135,7 @@ class CategoryIntegrationTest {
     @Test
     void create_returns401_whenUnauthenticated() {
         client.post().uri("/api/categories")
-                .body(new CreateCategoryRequest("Food"))
+                .body(new CreateCategoryRequest("Food", null, null))
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
@@ -146,7 +146,7 @@ class CategoryIntegrationTest {
 
         client.post().uri("/api/categories")
                 .header("Authorization", "Bearer " + adminToken)
-                .body(new CreateCategoryRequest("Food"))
+                .body(new CreateCategoryRequest("Food", null, null))
                 .exchange()
                 .expectStatus().isForbidden();
     }
@@ -254,7 +254,7 @@ class CategoryIntegrationTest {
 
         client.put().uri("/api/categories/{id}", created.id())
                 .header("Authorization", "Bearer " + login.token())
-                .body(new UpdateCategoryRequest("New"))
+                .body(new UpdateCategoryRequest("New", null, null))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(CategoryResponse.class)
@@ -271,7 +271,7 @@ class CategoryIntegrationTest {
 
         client.put().uri("/api/categories/{id}", aCat.id())
                 .header("Authorization", "Bearer " + b.token())
-                .body(new UpdateCategoryRequest("Hack"))
+                .body(new UpdateCategoryRequest("Hack", null, null))
                 .exchange()
                 .expectStatus().isNotFound();
 
@@ -286,7 +286,7 @@ class CategoryIntegrationTest {
 
         client.put().uri("/api/categories/{id}", other.id())
                 .header("Authorization", "Bearer " + login.token())
-                .body(new UpdateCategoryRequest("Taken"))
+                .body(new UpdateCategoryRequest("Taken", null, null))
                 .exchange()
                 .expectStatus().isEqualTo(409);
     }
@@ -298,7 +298,7 @@ class CategoryIntegrationTest {
 
         client.put().uri("/api/categories/{id}", created.id())
                 .header("Authorization", "Bearer " + login.token())
-                .body(new UpdateCategoryRequest(""))
+                .body(new UpdateCategoryRequest("", null, null))
                 .exchange()
                 .expectStatus().isBadRequest();
     }
@@ -361,7 +361,7 @@ class CategoryIntegrationTest {
     private CategoryResponse createCategory(String token, String name) {
         return client.post().uri("/api/categories")
                 .header("Authorization", "Bearer " + token)
-                .body(new CreateCategoryRequest(name))
+                .body(new CreateCategoryRequest(name, null, null))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(CategoryResponse.class)

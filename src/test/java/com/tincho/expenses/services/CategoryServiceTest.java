@@ -36,12 +36,12 @@ class CategoryServiceTest {
 
     @Test
     void create_persistsCategory_forTenant() {
-        CreateCategoryRequest req = new CreateCategoryRequest("Food");
+        CreateCategoryRequest req = new CreateCategoryRequest("Food", null, null);
         given(repository.existsByTenantIdAndName(7L, "Food")).willReturn(false);
         given(repository.save(any(Category.class)))
                 .willAnswer(inv -> {
                     Category c = inv.getArgument(0);
-                    return new Category(42L, c.tenant(), c.name(), c.createdAt());
+                    return new Category(42L, c.tenant(), c.name(), c.iconId(), c.colorId(), c.createdAt());
                 });
 
         Category created = service.create(7L, req);
@@ -61,7 +61,7 @@ class CategoryServiceTest {
     void create_throwsWhenNameAlreadyExistsForTenant() {
         given(repository.existsByTenantIdAndName(7L, "Food")).willReturn(true);
 
-        assertThatThrownBy(() -> service.create(7L, new CreateCategoryRequest("Food")))
+        assertThatThrownBy(() -> service.create(7L, new CreateCategoryRequest("Food", null, null)))
                 .isInstanceOf(CategoryNameAlreadyExistsException.class)
                 .hasMessageContaining("Food");
 
@@ -123,12 +123,12 @@ class CategoryServiceTest {
     void update_changesName_andPreservesOtherFields() {
         OffsetDateTime createdAt = OffsetDateTime.now().minusDays(1);
         Category existing = new Category(
-                1L, AggregateReference.<Tenant, Long>to(7L), "Old", createdAt);
+                1L, AggregateReference.<Tenant, Long>to(7L), "Old", null, null, createdAt);
         given(repository.findByIdAndTenantId(1L, 7L)).willReturn(Optional.of(existing));
         given(repository.existsByTenantIdAndName(7L, "New")).willReturn(false);
         given(repository.save(any(Category.class))).willAnswer(inv -> inv.getArgument(0));
 
-        Category updated = service.update(7L, 1L, new UpdateCategoryRequest("New"));
+        Category updated = service.update(7L, 1L, new UpdateCategoryRequest("New", null, null));
 
         ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
         verify(repository).save(captor.capture());
@@ -147,7 +147,7 @@ class CategoryServiceTest {
         given(repository.findByIdAndTenantId(1L, 7L)).willReturn(Optional.of(existing));
         given(repository.save(any(Category.class))).willAnswer(inv -> inv.getArgument(0));
 
-        service.update(7L, 1L, new UpdateCategoryRequest("Same"));
+        service.update(7L, 1L, new UpdateCategoryRequest("Same", null, null));
 
         verify(repository, never()).existsByTenantIdAndName(any(), any());
     }
@@ -159,7 +159,7 @@ class CategoryServiceTest {
         given(repository.existsByTenantIdAndName(7L, "Taken")).willReturn(true);
 
         assertThatThrownBy(() ->
-                service.update(7L, 1L, new UpdateCategoryRequest("Taken")))
+                service.update(7L, 1L, new UpdateCategoryRequest("Taken", null, null)))
                 .isInstanceOf(CategoryNameAlreadyExistsException.class);
 
         verify(repository, never()).save(any());
@@ -170,7 +170,7 @@ class CategoryServiceTest {
         given(repository.findByIdAndTenantId(1L, 7L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() ->
-                service.update(7L, 1L, new UpdateCategoryRequest("New")))
+                service.update(7L, 1L, new UpdateCategoryRequest("New", null, null)))
                 .isInstanceOf(CategoryNotFoundException.class);
 
         verify(repository, never()).save(any());
@@ -217,6 +217,6 @@ class CategoryServiceTest {
 
     private static Category category(Long id, Long tenantId, String name) {
         return new Category(
-                id, AggregateReference.<Tenant, Long>to(tenantId), name, OffsetDateTime.now());
+                id, AggregateReference.<Tenant, Long>to(tenantId), name, null, null, OffsetDateTime.now());
     }
 }

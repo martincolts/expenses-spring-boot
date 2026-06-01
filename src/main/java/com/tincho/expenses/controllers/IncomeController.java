@@ -2,6 +2,7 @@ package com.tincho.expenses.controllers;
 
 import com.tincho.expenses.controllers.dto.CreateIncomeRequest;
 import com.tincho.expenses.controllers.dto.IncomeResponse;
+import com.tincho.expenses.controllers.dto.UpdateIncomeRequest;
 import com.tincho.expenses.model.Income;
 import com.tincho.expenses.security.TenantUserDetails;
 import com.tincho.expenses.services.IncomeService;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -52,6 +54,14 @@ class IncomeController {
                 ? service.get(id)
                 : service.getForTenant(principal.getId(), id);
         return IncomeResponse.from(income);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('TENANT')")
+    IncomeResponse update(@PathVariable Long id,
+                          @Valid @RequestBody UpdateIncomeRequest req,
+                          @AuthenticationPrincipal TenantUserDetails principal) {
+        return IncomeResponse.from(service.update(principal.getId(), id, req));
     }
 
     @DeleteMapping("/{id}")

@@ -484,7 +484,7 @@ class ExpenseIntegrationTest {
     private CategoryResponse createCategory(String token, String name) {
         return client.post().uri("/api/categories")
                 .header("Authorization", "Bearer " + token)
-                .body(new CreateCategoryRequest(name))
+                .body(new CreateCategoryRequest(name, null, null))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(CategoryResponse.class)

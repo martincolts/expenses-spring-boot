@@ -29,6 +29,8 @@ public class CategoryService {
                 null,
                 AggregateReference.<Tenant, Long>to(tenantId),
                 req.name(),
+                req.iconId(),
+                req.colorId(),
                 OffsetDateTime.now()
         );
         return repository.save(c);
@@ -63,6 +65,8 @@ public class CategoryService {
                 existing.id(),
                 existing.tenant(),
                 req.name(),
+                req.iconId(),
+                req.colorId(),
                 existing.createdAt()
         );
         return repository.save(updated);

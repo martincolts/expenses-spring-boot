@@ -1,7 +1,9 @@
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { Alert, Box, Button, Stack, TextField } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 import { useLogin } from '../hooks/useAuth'
+import { useAuthContext } from '../contexts/AuthContext'
 
 const schema = Yup.object({
   email: Yup.string().email('Invalid email').required('Required'),
@@ -10,11 +12,19 @@ const schema = Yup.object({
 
 export function LoginForm() {
   const { mutate, isPending, isError, error } = useLogin()
+  const { login } = useAuthContext()
+  const navigate = useNavigate()
 
   const formik = useFormik({
     initialValues: { email: '', password: '' },
     validationSchema: schema,
-    onSubmit: (values) => mutate(values),
+    onSubmit: (values) =>
+      mutate(values, {
+        onSuccess: (data) => {
+          login(data)
+          navigate('/')
+        },
+      }),
   })
 
   return (

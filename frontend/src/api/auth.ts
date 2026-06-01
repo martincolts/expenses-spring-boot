@@ -10,7 +10,7 @@ export async function login(body: LoginRequest): Promise<AuthResponse> {
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(err.detail ?? 'Invalid credentials')
+    throw new Error((err as { detail?: string }).detail ?? 'Invalid credentials')
   }
   return res.json()
 }
@@ -23,7 +23,7 @@ export async function register(body: RegisterRequest): Promise<AuthResponse> {
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(err.detail ?? 'Registration failed')
+    throw new Error((err as { detail?: string }).detail ?? 'Registration failed')
   }
   return res.json()
 }

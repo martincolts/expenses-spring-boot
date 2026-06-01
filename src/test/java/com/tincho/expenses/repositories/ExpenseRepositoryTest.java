@@ -55,7 +55,7 @@ class ExpenseRepositoryTest {
 
     private Long createCategory(Long tenantId, String name) {
         Category c = categoryRepository.save(new Category(
-                null, AggregateReference.to(tenantId), name, OffsetDateTime.now()));
+                null, AggregateReference.to(tenantId), name, null, null, OffsetDateTime.now()));
         return c.id();
     }
 

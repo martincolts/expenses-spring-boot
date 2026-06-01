@@ -1,6 +1,7 @@
 package com.tincho.expenses.services;
 
 import com.tincho.expenses.controllers.dto.CreateIncomeRequest;
+import com.tincho.expenses.controllers.dto.UpdateIncomeRequest;
 import com.tincho.expenses.exceptions.IncomeNotFoundException;
 import com.tincho.expenses.model.Income;
 import com.tincho.expenses.model.Tenant;
@@ -45,6 +46,12 @@ public class IncomeService {
     public Income get(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new IncomeNotFoundException(id));
+    }
+
+    @Transactional
+    public Income update(Long tenantId, Long id, UpdateIncomeRequest req) {
+        Income existing = getForTenant(tenantId, id);
+        return repository.save(new Income(existing.id(), existing.tenant(), req.amount(), existing.createdAt()));
     }
 
     @Transactional

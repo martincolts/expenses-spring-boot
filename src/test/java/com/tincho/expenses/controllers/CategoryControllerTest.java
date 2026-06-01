@@ -36,7 +36,7 @@ class CategoryControllerTest {
     @Test
     void create_delegatesToService_andReturnsResponse() {
         TenantUserDetails principal = tenantPrincipal(7L);
-        CreateCategoryRequest req = new CreateCategoryRequest("Food");
+        CreateCategoryRequest req = new CreateCategoryRequest("Food", null, null);
         Category saved = category(1L, 7L, "Food");
         given(service.create(7L, req)).willReturn(saved);
 
@@ -107,7 +107,7 @@ class CategoryControllerTest {
     @Test
     void update_delegatesToService_andReturnsResponse() {
         TenantUserDetails principal = tenantPrincipal(7L);
-        UpdateCategoryRequest req = new UpdateCategoryRequest("New");
+        UpdateCategoryRequest req = new UpdateCategoryRequest("New", null, null);
         Category updated = category(1L, 7L, "New");
         given(service.update(7L, 1L, req)).willReturn(updated);
 
@@ -151,6 +151,6 @@ class CategoryControllerTest {
 
     private static Category category(Long id, Long tenantId, String name) {
         return new Category(
-                id, AggregateReference.<Tenant, Long>to(tenantId), name, OffsetDateTime.now());
+                id, AggregateReference.<Tenant, Long>to(tenantId), name, null, null, OffsetDateTime.now());
     }
 }
