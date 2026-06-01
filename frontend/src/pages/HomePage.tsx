@@ -44,12 +44,12 @@ function SummaryCard({ label, value, icon, color }: SummaryCardProps) {
   return (
     <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
       <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
           <Box>
             <Typography variant="body2" color="text.secondary" gutterBottom>
               {label}
             </Typography>
-            <Typography variant="h5" fontWeight={700} sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
               {value}
             </Typography>
           </Box>
@@ -142,7 +142,7 @@ export function HomePage() {
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
       <Stack spacing={{ xs: 3, md: 4 }}>
-        <Typography variant="h5" fontWeight={700} sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
           Dashboard
         </Typography>
 
@@ -180,7 +180,7 @@ export function HomePage() {
           <Grid size={{ xs: 12, md: 8 }}>
             <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
                   Expenses — Last 6 Months
                 </Typography>
                 {monthlyData.every(m => m.amount === 0) ? (
@@ -195,7 +195,7 @@ export function HomePage() {
                         <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
                         <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
                         <Tooltip
-                          formatter={(v: number) => [formatCurrency(v), 'Expenses']}
+                          formatter={(v) => [formatCurrency(Number(v)), 'Expenses']}
                           contentStyle={{ borderRadius: 8, border: '1px solid #e0e0e0' }}
                         />
                         <Bar dataKey="amount" fill="#1976d2" radius={[6, 6, 0, 0]} maxBarSize={48} />
@@ -211,7 +211,7 @@ export function HomePage() {
           <Grid size={{ xs: 12, md: 4 }}>
             <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, height: '100%' }}>
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
                   Expense Status
                 </Typography>
                 {statusData.length === 0 ? (
@@ -241,7 +241,7 @@ export function HomePage() {
                           }
                         />
                         <Tooltip
-                          formatter={(v: number) => [formatCurrency(v)]}
+                          formatter={(v) => [formatCurrency(Number(v))]}
                           contentStyle={{ borderRadius: 8, border: '1px solid #e0e0e0' }}
                         />
                       </PieChart>

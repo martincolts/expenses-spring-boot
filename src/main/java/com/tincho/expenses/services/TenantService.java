@@ -19,6 +19,7 @@ public class TenantService {
 
     private final TenantRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final DefaultCategorySeeder defaultCategorySeeder;
 
     @Transactional
     public Tenant create(CreateTenantRequest req) {
@@ -33,7 +34,9 @@ public class TenantService {
                 "TENANT",
                 OffsetDateTime.now()
         );
-        return repository.save(tenant);
+        Tenant saved = repository.save(tenant);
+        defaultCategorySeeder.seedFor(saved.id());
+        return saved;
     }
 
     public List<Tenant> list() {

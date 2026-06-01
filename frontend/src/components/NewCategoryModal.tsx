@@ -95,7 +95,7 @@ export function NewCategoryModal({ open, onClose, category }: Props) {
       onClose={handleClose}
       fullWidth
       maxWidth="sm"
-      PaperProps={{ sx: { borderRadius: 3 } }}
+      slotProps={{ paper: { sx: { borderRadius: 3 } } }}
     >
       <DialogTitle sx={{ pr: 6 }}>
         {isEdit ? 'Edit Category' : 'New Category'}

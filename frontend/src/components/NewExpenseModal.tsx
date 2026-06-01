@@ -106,7 +106,7 @@ export function NewExpenseModal({ open, onClose, expense }: Props) {
       onClose={handleClose}
       fullWidth
       maxWidth="sm"
-      PaperProps={{ sx: { borderRadius: 3 } }}
+      slotProps={{ paper: { sx: { borderRadius: 3 } } }}
     >
       <DialogTitle sx={{ pr: 6 }}>
         {isEdit ? 'Edit Expense' : 'New Expense'}
@@ -156,7 +156,7 @@ export function NewExpenseModal({ open, onClose, expense }: Props) {
               <TextField
                 label="Amount"
                 type="number"
-                inputProps={{ min: 0, step: '0.01' }}
+                slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
                 fullWidth
                 {...formik.getFieldProps('amount')}
                 error={formik.touched.amount && Boolean(formik.errors.amount)}

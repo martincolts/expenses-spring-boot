@@ -58,7 +58,7 @@ export function AppShell({ children }: AppShellProps) {
   const drawerContent = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Toolbar sx={{ justifyContent: 'center' }}>
-        <Typography variant="h6" fontWeight={700} color="primary.main">
+        <Typography variant="h6" color="primary.main" sx={{ fontWeight: 700 }}>
           Spendly
         </Typography>
       </Toolbar>
@@ -82,7 +82,7 @@ export function AppShell({ children }: AppShellProps) {
         <Typography variant="caption" color="text.secondary" noWrap>
           {user?.name}
         </Typography>
-        <Typography variant="caption" color="text.disabled" display="block" noWrap>
+        <Typography variant="caption" color="text.disabled" noWrap sx={{ display: 'block' }}>
           {user?.email}
         </Typography>
       </Box>
@@ -112,9 +112,8 @@ export function AppShell({ children }: AppShellProps) {
           </IconButton>
           <Typography
             variant="h6"
-            fontWeight={700}
             color="primary.main"
-            sx={{ flexGrow: 1, display: { xs: 'block', md: 'none' } }}
+            sx={{ flexGrow: 1, display: { xs: 'block', md: 'none' }, fontWeight: 700 }}
           >
             Spendly
           </Typography>
@@ -127,7 +126,7 @@ export function AppShell({ children }: AppShellProps) {
           <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
             <MenuItem disabled sx={{ opacity: '1 !important' }}>
               <Box>
-                <Typography variant="body2" fontWeight={600}>{user?.name}</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>{user?.name}</Typography>
                 <Typography variant="caption" color="text.secondary">{user?.email}</Typography>
               </Box>
             </MenuItem>
