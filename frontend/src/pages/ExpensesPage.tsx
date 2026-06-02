@@ -9,6 +9,11 @@ import {
   Chip,
   CircularProgress,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   FormControl,
   IconButton,
   InputLabel,
@@ -23,6 +28,7 @@ import {
   TablePagination,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
   Paper,
 } from '@mui/material'
@@ -30,10 +36,14 @@ import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import FilterListIcon from '@mui/icons-material/FilterList'
 import ClearIcon from '@mui/icons-material/Clear'
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined'
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import { fetchExpenses, type ExpenseFilters } from '../api/expenses'
 import type { Expense } from '../types/expense'
 import { NewExpenseModal } from '../components/NewExpenseModal'
 import { useDeleteExpense } from '../hooks/useDeleteExpense'
+import { useMarkExpensePaid } from '../hooks/useMarkExpensePaid'
+import { useMarkExpenseUnpaid } from '../hooks/useMarkExpenseUnpaid'
 import { useCategories } from '../hooks/useCategories'
 
 function formatAmount(amount: string, currency: string) {
@@ -47,10 +57,14 @@ function formatDate(iso: string) {
 function ExpenseCard({
   expense,
   onDelete,
+  onMarkPaid,
+  onMarkPending,
   onClick,
 }: {
   expense: Expense
-  onDelete: (id: number) => void
+  onDelete: (expense: Expense) => void
+  onMarkPaid: (expense: Expense) => void
+  onMarkPending: (expense: Expense) => void
   onClick: (expense: Expense) => void
 }) {
   return (
@@ -77,10 +91,32 @@ function ExpenseCard({
                   color={expense.status === 'PAID' ? 'success' : 'warning'}
                   variant="outlined"
                 />
+                {expense.status === 'PENDING' && (
+                  <Tooltip title="Mark as paid">
+                    <IconButton
+                      size="small"
+                      color="success"
+                      onClick={e => { e.stopPropagation(); onMarkPaid(expense) }}
+                    >
+                      <CheckCircleOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {expense.status === 'PAID' && (
+                  <Tooltip title="Mark as pending">
+                    <IconButton
+                      size="small"
+                      color="warning"
+                      onClick={e => { e.stopPropagation(); onMarkPending(expense) }}
+                    >
+                      <RadioButtonUncheckedIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 <IconButton
                   size="small"
                   color="error"
-                  onClick={e => { e.stopPropagation(); onDelete(expense.id) }}
+                  onClick={e => { e.stopPropagation(); onDelete(expense) }}
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
@@ -111,6 +147,9 @@ export function ExpensesPage() {
   const [rowsPerPage, setRowsPerPage] = useState(20)
   const [filters, setFilters] = useState<ExpenseFilters>(EMPTY_FILTERS)
   const [showFilters, setShowFilters] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Expense | null>(null)
+  const [payTarget, setPayTarget] = useState<Expense | null>(null)
+  const [unpayTarget, setUnpayTarget] = useState<Expense | null>(null)
 
   const { data: categoriesData } = useCategories()
   const categories = categoriesData ?? []
@@ -123,7 +162,9 @@ export function ExpensesPage() {
   const expenses = data?.content ?? []
   const totalElements = data?.totalElements ?? 0
 
-  const { mutate: deleteExpense } = useDeleteExpense()
+  const { mutate: deleteExpense, isPending: isDeleting } = useDeleteExpense()
+  const { mutate: markPaid, isPending: isMarkingPaid } = useMarkExpensePaid()
+  const { mutate: markPending, isPending: isMarkingPending } = useMarkExpenseUnpaid()
 
   const handleRowsPerPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(e.target.value))
@@ -138,6 +179,21 @@ export function ExpensesPage() {
   function clearFilters() {
     setFilters(EMPTY_FILTERS)
     setPage(0)
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget) return
+    deleteExpense(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) })
+  }
+
+  function confirmMarkPaid() {
+    if (!payTarget) return
+    markPaid(payTarget.id, { onSuccess: () => setPayTarget(null) })
+  }
+
+  function confirmMarkPending() {
+    if (!unpayTarget) return
+    markPending(unpayTarget.id, { onSuccess: () => setUnpayTarget(null) })
   }
 
   const paginationProps = {
@@ -220,7 +276,7 @@ export function ExpensesPage() {
                 label="From"
                 type="date"
                 size="small"
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
                 value={filters.dateFrom ?? ''}
                 onChange={e => setFilter('dateFrom', e.target.value || null)}
                 sx={{ minWidth: 150 }}
@@ -230,10 +286,9 @@ export function ExpensesPage() {
                 label="To"
                 type="date"
                 size="small"
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: filters.dateFrom ?? undefined } }}
                 value={filters.dateTo ?? ''}
                 onChange={e => setFilter('dateTo', e.target.value || null)}
-                inputProps={{ min: filters.dateFrom ?? undefined }}
                 sx={{ minWidth: 150 }}
               />
 
@@ -258,6 +313,67 @@ export function ExpensesPage() {
           expense={selected ?? undefined}
         />
 
+        {/* Delete confirmation dialog */}
+        <Dialog open={deleteTarget != null} onClose={() => setDeleteTarget(null)}>
+          <DialogTitle>Delete expense?</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {deleteTarget && (
+                <>
+                  Are you sure you want to delete <strong>{deleteTarget.description}</strong> ({formatAmount(deleteTarget.amount, deleteTarget.currency)})?
+                  This action cannot be undone.
+                </>
+              )}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Cancel</Button>
+            <Button onClick={confirmDelete} color="error" variant="contained" loading={isDeleting}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Mark as paid confirmation dialog */}
+        <Dialog open={payTarget != null} onClose={() => setPayTarget(null)}>
+          <DialogTitle>Mark as paid?</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {payTarget && (
+                <>
+                  Mark <strong>{payTarget.description}</strong> ({formatAmount(payTarget.amount, payTarget.currency)}) as paid?
+                </>
+              )}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPayTarget(null)} disabled={isMarkingPaid}>Cancel</Button>
+            <Button onClick={confirmMarkPaid} color="success" variant="contained" loading={isMarkingPaid}>
+              Mark as paid
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Mark as pending confirmation dialog */}
+        <Dialog open={unpayTarget != null} onClose={() => setUnpayTarget(null)}>
+          <DialogTitle>Mark as pending?</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {unpayTarget && (
+                <>
+                  Move <strong>{unpayTarget.description}</strong> ({formatAmount(unpayTarget.amount, unpayTarget.currency)}) back to pending?
+                </>
+              )}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setUnpayTarget(null)} disabled={isMarkingPending}>Cancel</Button>
+            <Button onClick={confirmMarkPending} color="warning" variant="contained" loading={isMarkingPending}>
+              Mark as pending
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         {isPending && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
             <CircularProgress />
@@ -281,7 +397,14 @@ export function ExpensesPage() {
           <Box sx={{ display: { xs: 'block', md: 'none' } }}>
             <Stack spacing={1.5}>
               {expenses.map(e => (
-                <ExpenseCard key={e.id} expense={e} onDelete={deleteExpense} onClick={setSelected} />
+                <ExpenseCard
+                  key={e.id}
+                  expense={e}
+                  onDelete={setDeleteTarget}
+                  onMarkPaid={setPayTarget}
+                  onMarkPending={setUnpayTarget}
+                  onClick={setSelected}
+                />
               ))}
             </Stack>
             <TablePagination component="div" {...paginationProps} sx={{ mt: 1 }} />
@@ -322,13 +445,37 @@ export function ExpensesPage() {
                         />
                       </TableCell>
                       <TableCell align="right">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={e2 => { e2.stopPropagation(); deleteExpense(e.id) }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                        <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                          {e.status === 'PENDING' && (
+                            <Tooltip title="Mark as paid">
+                              <IconButton
+                                size="small"
+                                color="success"
+                                onClick={e2 => { e2.stopPropagation(); setPayTarget(e) }}
+                              >
+                                <CheckCircleOutlineIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          {e.status === 'PAID' && (
+                            <Tooltip title="Mark as pending">
+                              <IconButton
+                                size="small"
+                                color="warning"
+                                onClick={e2 => { e2.stopPropagation(); setUnpayTarget(e) }}
+                              >
+                                <RadioButtonUncheckedIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={e2 => { e2.stopPropagation(); setDeleteTarget(e) }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Stack>
                       </TableCell>
                     </TableRow>
                   ))}

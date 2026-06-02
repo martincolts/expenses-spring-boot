@@ -92,11 +92,11 @@ class ExpenseIntegrationTest {
         assertThat(created.description()).isEqualTo("Lunch");
         assertThat(created.amount()).isEqualByComparingTo("12.50");
         assertThat(created.currency()).isEqualTo("USD");
-        assertThat(created.status()).isEqualTo(ExpenseStatus.NOT_PAUD_YET);
+        assertThat(created.status()).isEqualTo(ExpenseStatus.PENDING);
         assertThat(created.paidAt()).isNull();
 
         var stored = repository.findById(created.id()).orElseThrow();
-        assertThat(stored.status()).isEqualTo(ExpenseStatus.NOT_PAUD_YET);
+        assertThat(stored.status()).isEqualTo(ExpenseStatus.PENDING);
     }
 
     @Test
@@ -386,7 +386,7 @@ class ExpenseIntegrationTest {
         client.put().uri("/api/expenses/{id}", created.id())
                 .header("Authorization", "Bearer " + login.token())
                 .body(new UpdateExpenseRequest(
-                        newCat.id(), "New", new BigDecimal("99.99"), "EUR", newIncurred))
+                        newCat.id(), "New", new BigDecimal("99.99"), "EUR", newIncurred, true))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ExpenseResponse.class)
@@ -415,7 +415,7 @@ class ExpenseIntegrationTest {
         client.put().uri("/api/expenses/{id}", aExp.id())
                 .header("Authorization", "Bearer " + a.token())
                 .body(new UpdateExpenseRequest(
-                        catB.id(), "x", new BigDecimal("1.00"), "USD", INCURRED_AT))
+                        catB.id(), "x", new BigDecimal("1.00"), "USD", INCURRED_AT, false))
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -482,12 +482,12 @@ class ExpenseIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody(ExpenseResponse.class)
                 .value(e -> {
-                    assertThat(e.status()).isEqualTo(ExpenseStatus.NOT_PAUD_YET);
+                    assertThat(e.status()).isEqualTo(ExpenseStatus.PENDING);
                     assertThat(e.paidAt()).isNull();
                 });
 
         var stored = repository.findById(created.id()).orElseThrow();
-        assertThat(stored.status()).isEqualTo(ExpenseStatus.NOT_PAUD_YET);
+        assertThat(stored.status()).isEqualTo(ExpenseStatus.PENDING);
         assertThat(stored.paidAt()).isNull();
     }
 

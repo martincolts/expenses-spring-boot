@@ -50,3 +50,15 @@ export async function deleteExpense(id: number): Promise<void> {
   const res = await apiFetch(`${BASE}/${id}`, { method: 'DELETE' })
   if (!res.ok) throw new Error('Failed to delete expense')
 }
+
+export async function markExpensePaid(id: number): Promise<Expense> {
+  const res = await apiFetch(`${BASE}/${id}/pay`, { method: 'POST' })
+  if (!res.ok) throw new Error('Failed to mark expense as paid')
+  return res.json()
+}
+
+export async function markExpenseUnpaid(id: number): Promise<Expense> {
+  const res = await apiFetch(`${BASE}/${id}/unpay`, { method: 'POST' })
+  if (!res.ok) throw new Error('Failed to mark expense as unpaid')
+  return res.json()
+}

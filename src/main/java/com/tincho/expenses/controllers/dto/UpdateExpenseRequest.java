@@ -12,5 +12,6 @@ public record UpdateExpenseRequest(
         @NotBlank @Size(max = 255) String description,
         @NotNull @Positive BigDecimal amount,
         @NotBlank @Size(min = 3, max = 3) String currency,
-        @NotNull OffsetDateTime incurredAt
+        @NotNull OffsetDateTime incurredAt,
+        boolean paid
 ) {}

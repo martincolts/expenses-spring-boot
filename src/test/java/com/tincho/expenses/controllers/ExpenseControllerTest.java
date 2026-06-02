@@ -49,7 +49,7 @@ class ExpenseControllerTest {
         CreateExpenseRequest req = new CreateExpenseRequest(
                 3L, "Lunch", new BigDecimal("10.00"), "USD",
                 OffsetDateTime.parse("2026-05-09T13:00:00Z"), false);
-        Expense saved = expense(1L, 7L, 3L, ExpenseStatus.NOT_PAUD_YET);
+        Expense saved = expense(1L, 7L, 3L, ExpenseStatus.PENDING);
         given(service.create(7L, req)).willReturn(saved);
 
         ExpenseResponse response = controller.create(req, principal);
@@ -62,7 +62,7 @@ class ExpenseControllerTest {
     void list_callsListForTenant_whenTenant() {
         TenantUserDetails principal = tenantPrincipal(7L);
         Expense a = expense(1L, 7L, 3L, ExpenseStatus.PAID);
-        Expense b = expense(2L, 7L, 3L, ExpenseStatus.NOT_PAUD_YET);
+        Expense b = expense(2L, 7L, 3L, ExpenseStatus.PENDING);
         given(service.listForTenant(eq(7L), isNull(), isNull(), isNull(), isNull(), eq(PageRequest.of(0, 20))))
                 .willReturn(new PageImpl<>(List.of(a, b)));
 
@@ -127,7 +127,7 @@ class ExpenseControllerTest {
         TenantUserDetails principal = tenantPrincipal(7L);
         UpdateExpenseRequest req = new UpdateExpenseRequest(
                 4L, "New", new BigDecimal("20.00"), "EUR",
-                OffsetDateTime.parse("2026-05-09T13:00:00Z"));
+                OffsetDateTime.parse("2026-05-09T13:00:00Z"), false);
         Expense updated = expense(1L, 7L, 4L, ExpenseStatus.PAID);
         given(service.update(7L, 1L, req)).willReturn(updated);
 
@@ -162,7 +162,7 @@ class ExpenseControllerTest {
 
     @Test
     void unpay_callsMarkUnpaidForTenant_whenTenant() {
-        Expense unpaid = expense(1L, 7L, 3L, ExpenseStatus.NOT_PAUD_YET);
+        Expense unpaid = expense(1L, 7L, 3L, ExpenseStatus.PENDING);
         given(service.markUnpaidForTenant(7L, 1L)).willReturn(unpaid);
 
         ExpenseResponse response = controller.unpay(1L, tenantPrincipal(7L));
@@ -174,7 +174,7 @@ class ExpenseControllerTest {
 
     @Test
     void unpay_callsMarkUnpaid_whenAdmin() {
-        Expense unpaid = expense(1L, 7L, 3L, ExpenseStatus.NOT_PAUD_YET);
+        Expense unpaid = expense(1L, 7L, 3L, ExpenseStatus.PENDING);
         given(service.markUnpaid(1L)).willReturn(unpaid);
 
         controller.unpay(1L, adminPrincipal(99L));

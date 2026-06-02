@@ -58,7 +58,7 @@ task buildFrontend(type: Exec) {
 	inputs.dir 'frontend/src'
 	inputs.files 'frontend/package.json', 'frontend/vite.config.ts', 'frontend/tsconfig.json'
 	outputs.dir 'frontend/dist'
-	onlyIf { gradle.taskGraph.hasTask(':bootJar') || gradle.taskGraph.hasTask(':bootRun') }
+	onlyIf { gradle.taskGraph.hasTask(':bootJar') }
 }
 
 processResources {

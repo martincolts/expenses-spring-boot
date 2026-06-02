@@ -63,7 +63,7 @@ class ExpenseServiceTest {
         assertThat(toSave.description()).isEqualTo("Lunch");
         assertThat(toSave.amount()).isEqualByComparingTo("12.50");
         assertThat(toSave.currency()).isEqualTo("USD");
-        assertThat(toSave.status()).isEqualTo(ExpenseStatus.NOT_PAUD_YET);
+        assertThat(toSave.status()).isEqualTo(ExpenseStatus.PENDING);
         assertThat(toSave.incurredAt()).isEqualTo(incurredAt);
         assertThat(toSave.createdAt()).isNotNull();
         assertThat(toSave.paidAt()).isNull();
@@ -104,7 +104,7 @@ class ExpenseServiceTest {
 
     @Test
     void listForTenant_returnsRepositoryResults() {
-        Expense a = expense(1L, 7L, 3L, ExpenseStatus.NOT_PAUD_YET);
+        Expense a = expense(1L, 7L, 3L, ExpenseStatus.PENDING);
         Expense b = expense(2L, 7L, 3L, ExpenseStatus.PAID);
         given(repository.findByTenantId(7L)).willReturn(List.of(a, b));
 
@@ -114,7 +114,7 @@ class ExpenseServiceTest {
     @Test
     void listAll_returnsRepositoryResults() {
         Expense a = expense(1L, 7L, 3L, ExpenseStatus.PAID);
-        Expense b = expense(2L, 8L, 4L, ExpenseStatus.NOT_PAUD_YET);
+        Expense b = expense(2L, 8L, 4L, ExpenseStatus.PENDING);
         given(repository.findAll()).willReturn(List.of(a, b));
 
         assertThat(service.listAll()).containsExactly(a, b);
@@ -151,12 +151,12 @@ class ExpenseServiceTest {
 
     @Test
     void listAllFiltered_passesFiltersToRepository() {
-        Expense a = expense(1L, 7L, 3L, ExpenseStatus.NOT_PAUD_YET);
-        given(repository.findAllFilteredPaged(3L, "NOT_PAUD_YET", null, null, 20, 0L))
+        Expense a = expense(1L, 7L, 3L, ExpenseStatus.PENDING);
+        given(repository.findAllFilteredPaged(3L, "PENDING", null, null, 20, 0L))
                 .willReturn(List.of(a));
-        given(repository.countAllFiltered(3L, "NOT_PAUD_YET", null, null)).willReturn(1L);
+        given(repository.countAllFiltered(3L, "PENDING", null, null)).willReturn(1L);
 
-        var page = service.listAll(3L, ExpenseStatus.NOT_PAUD_YET, null, null,
+        var page = service.listAll(3L, ExpenseStatus.PENDING, null, null,
                 org.springframework.data.domain.PageRequest.of(0, 20));
 
         assertThat(page.getContent()).containsExactly(a);
@@ -214,7 +214,7 @@ class ExpenseServiceTest {
 
         OffsetDateTime newIncurredAt = OffsetDateTime.parse("2026-05-09T13:00:00Z");
         UpdateExpenseRequest req = new UpdateExpenseRequest(
-                4L, "New desc", new BigDecimal("20.00"), "eur", newIncurredAt);
+                4L, "New desc", new BigDecimal("20.00"), "eur", newIncurredAt, true);
 
         service.update(7L, 1L, req);
 
@@ -234,12 +234,50 @@ class ExpenseServiceTest {
     }
 
     @Test
+    void update_marksPaid_whenPaidFlagChangesToTrue() {
+        Expense existing = expense(1L, 7L, 3L, ExpenseStatus.PENDING);
+        given(repository.findByIdAndTenantId(1L, 7L)).willReturn(Optional.of(existing));
+        givenCategoryOwned(3L, 7L);
+        given(repository.save(any(Expense.class))).willAnswer(inv -> inv.getArgument(0));
+
+        UpdateExpenseRequest req = new UpdateExpenseRequest(
+                3L, "desc", new BigDecimal("10.00"), "USD",
+                OffsetDateTime.parse("2026-05-09T13:00:00Z"), true);
+
+        service.update(7L, 1L, req);
+
+        ArgumentCaptor<Expense> captor = ArgumentCaptor.forClass(Expense.class);
+        verify(repository).save(captor.capture());
+        assertThat(captor.getValue().status()).isEqualTo(ExpenseStatus.PAID);
+        assertThat(captor.getValue().paidAt()).isNotNull();
+    }
+
+    @Test
+    void update_marksPending_whenPaidFlagChangesToFalse() {
+        Expense existing = expense(1L, 7L, 3L, ExpenseStatus.PAID);
+        given(repository.findByIdAndTenantId(1L, 7L)).willReturn(Optional.of(existing));
+        givenCategoryOwned(3L, 7L);
+        given(repository.save(any(Expense.class))).willAnswer(inv -> inv.getArgument(0));
+
+        UpdateExpenseRequest req = new UpdateExpenseRequest(
+                3L, "desc", new BigDecimal("10.00"), "USD",
+                OffsetDateTime.parse("2026-05-09T13:00:00Z"), false);
+
+        service.update(7L, 1L, req);
+
+        ArgumentCaptor<Expense> captor = ArgumentCaptor.forClass(Expense.class);
+        verify(repository).save(captor.capture());
+        assertThat(captor.getValue().status()).isEqualTo(ExpenseStatus.PENDING);
+        assertThat(captor.getValue().paidAt()).isNull();
+    }
+
+    @Test
     void update_throws_whenNotOwned() {
         given(repository.findByIdAndTenantId(1L, 7L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.update(7L, 1L, new UpdateExpenseRequest(
                 3L, "x", new BigDecimal("1.00"), "USD",
-                OffsetDateTime.parse("2026-05-09T13:00:00Z"))))
+                OffsetDateTime.parse("2026-05-09T13:00:00Z"), false)))
                 .isInstanceOf(ExpenseNotFoundException.class);
 
         verify(repository, never()).save(any());
@@ -253,7 +291,7 @@ class ExpenseServiceTest {
 
         assertThatThrownBy(() -> service.update(7L, 1L, new UpdateExpenseRequest(
                 99L, "x", new BigDecimal("1.00"), "USD",
-                OffsetDateTime.parse("2026-05-09T13:00:00Z"))))
+                OffsetDateTime.parse("2026-05-09T13:00:00Z"), false)))
                 .isInstanceOf(CategoryNotFoundException.class);
 
         verify(repository, never()).save(any());
@@ -261,7 +299,7 @@ class ExpenseServiceTest {
 
     @Test
     void markPaidForTenant_setsStatusAndPaidAt() {
-        Expense existing = expense(1L, 7L, 3L, ExpenseStatus.NOT_PAUD_YET);
+        Expense existing = expense(1L, 7L, 3L, ExpenseStatus.PENDING);
         given(repository.findByIdAndTenantId(1L, 7L)).willReturn(Optional.of(existing));
         given(repository.save(any(Expense.class))).willAnswer(inv -> inv.getArgument(0));
 
@@ -310,13 +348,13 @@ class ExpenseServiceTest {
 
         ArgumentCaptor<Expense> captor = ArgumentCaptor.forClass(Expense.class);
         verify(repository).save(captor.capture());
-        assertThat(captor.getValue().status()).isEqualTo(ExpenseStatus.NOT_PAUD_YET);
+        assertThat(captor.getValue().status()).isEqualTo(ExpenseStatus.PENDING);
         assertThat(captor.getValue().paidAt()).isNull();
     }
 
     @Test
     void markUnpaidForTenant_throws_whenNotPaid() {
-        Expense existing = expense(1L, 7L, 3L, ExpenseStatus.NOT_PAUD_YET);
+        Expense existing = expense(1L, 7L, 3L, ExpenseStatus.PENDING);
         given(repository.findByIdAndTenantId(1L, 7L)).willReturn(Optional.of(existing));
 
         assertThatThrownBy(() -> service.markUnpaidForTenant(7L, 1L))

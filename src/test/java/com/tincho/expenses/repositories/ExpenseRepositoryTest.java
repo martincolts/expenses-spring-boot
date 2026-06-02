@@ -76,7 +76,7 @@ class ExpenseRepositoryTest {
     void save_assignsId() {
         Long tenantId = createTenant("save@example.com");
         Long categoryId = createCategory(tenantId, "Food");
-        Expense e = newExpense(tenantId, categoryId, ExpenseStatus.NOT_PAUD_YET,
+        Expense e = newExpense(tenantId, categoryId, ExpenseStatus.PENDING,
                 OffsetDateTime.parse("2026-05-09T13:00:00Z"));
 
         Expense saved = repository.save(e);
@@ -111,13 +111,13 @@ class ExpenseRepositoryTest {
         Long categoryId = createCategory(tenantId, "Food");
         Expense paid = repository.save(newExpense(tenantId, categoryId, ExpenseStatus.PAID,
                 OffsetDateTime.parse("2026-05-09T13:00:00Z")));
-        Expense pending = repository.save(newExpense(tenantId, categoryId, ExpenseStatus.NOT_PAUD_YET,
+        Expense pending = repository.save(newExpense(tenantId, categoryId, ExpenseStatus.PENDING,
                 OffsetDateTime.parse("2026-05-09T13:00:00Z")));
 
         assertThat(repository.findById(paid.id()).orElseThrow().status())
                 .isEqualTo(ExpenseStatus.PAID);
         assertThat(repository.findById(pending.id()).orElseThrow().status())
-                .isEqualTo(ExpenseStatus.NOT_PAUD_YET);
+                .isEqualTo(ExpenseStatus.PENDING);
     }
 
     @Test
@@ -128,7 +128,7 @@ class ExpenseRepositoryTest {
         Long catB = createCategory(tenantB, "Food");
         Expense older = repository.save(newExpense(tenantA, catA, ExpenseStatus.PAID,
                 OffsetDateTime.parse("2026-05-01T10:00:00Z")));
-        Expense newer = repository.save(newExpense(tenantA, catA, ExpenseStatus.NOT_PAUD_YET,
+        Expense newer = repository.save(newExpense(tenantA, catA, ExpenseStatus.PENDING,
                 OffsetDateTime.parse("2026-05-09T10:00:00Z")));
         repository.save(newExpense(tenantB, catB, ExpenseStatus.PAID,
                 OffsetDateTime.parse("2026-05-09T10:00:00Z")));
@@ -180,9 +180,9 @@ class ExpenseRepositoryTest {
         Long tenantId = createTenant("cat-filter@example.com");
         Long catA = createCategory(tenantId, "Food");
         Long catB = createCategory(tenantId, "Travel");
-        Expense food = repository.save(newExpense(tenantId, catA, ExpenseStatus.NOT_PAUD_YET,
+        Expense food = repository.save(newExpense(tenantId, catA, ExpenseStatus.PENDING,
                 OffsetDateTime.parse("2026-05-01T10:00:00Z")));
-        repository.save(newExpense(tenantId, catB, ExpenseStatus.NOT_PAUD_YET,
+        repository.save(newExpense(tenantId, catB, ExpenseStatus.PENDING,
                 OffsetDateTime.parse("2026-05-02T10:00:00Z")));
 
         var results = repository.findByTenantIdFilteredPaged(tenantId, catA, null, null, null, 20, 0L);
@@ -196,7 +196,7 @@ class ExpenseRepositoryTest {
         Long cat = createCategory(tenantId, "Food");
         Expense paid = repository.save(newExpense(tenantId, cat, ExpenseStatus.PAID,
                 OffsetDateTime.parse("2026-05-01T10:00:00Z")));
-        repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.PENDING,
                 OffsetDateTime.parse("2026-05-02T10:00:00Z")));
 
         var results = repository.findByTenantIdFilteredPaged(tenantId, null, "PAID", null, null, 20, 0L);
@@ -208,11 +208,11 @@ class ExpenseRepositoryTest {
     void findByTenantIdFilteredPaged_filtersByDateRange() {
         Long tenantId = createTenant("date-filter@example.com");
         Long cat = createCategory(tenantId, "Food");
-        repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.PENDING,
                 OffsetDateTime.parse("2026-03-01T10:00:00Z")));
-        Expense inRange = repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+        Expense inRange = repository.save(newExpense(tenantId, cat, ExpenseStatus.PENDING,
                 OffsetDateTime.parse("2026-05-15T10:00:00Z")));
-        repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.PENDING,
                 OffsetDateTime.parse("2026-08-01T10:00:00Z")));
 
         var results = repository.findByTenantIdFilteredPaged(
@@ -230,7 +230,7 @@ class ExpenseRepositoryTest {
         Long cat = createCategory(tenantId, "Food");
         repository.save(newExpense(tenantId, cat, ExpenseStatus.PAID,
                 OffsetDateTime.parse("2026-05-01T10:00:00Z")));
-        repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.PENDING,
                 OffsetDateTime.parse("2026-05-09T10:00:00Z")));
 
         var results = repository.findByTenantIdFilteredPaged(tenantId, null, null, null, null, 20, 0L);
@@ -244,7 +244,7 @@ class ExpenseRepositoryTest {
         Long cat = createCategory(tenantId, "Food");
         repository.save(newExpense(tenantId, cat, ExpenseStatus.PAID,
                 OffsetDateTime.parse("2026-05-01T10:00:00Z")));
-        repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.PENDING,
                 OffsetDateTime.parse("2026-05-09T10:00:00Z")));
 
         long count = repository.countByTenantIdFiltered(tenantId, null, "PAID", null, null);

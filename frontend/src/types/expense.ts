@@ -37,6 +37,7 @@ export interface UpdateExpenseRequest {
   amount: number
   currency: string
   incurredAt: string
+  paid: boolean
 }
 
 export interface UpdateIncomeRequest {

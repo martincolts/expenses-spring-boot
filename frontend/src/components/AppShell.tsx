@@ -17,6 +17,7 @@ import {
   Menu,
   MenuItem,
   Paper,
+  Stack,
   Toolbar,
   Typography,
 } from '@mui/material'
@@ -26,6 +27,7 @@ import SavingsIcon from '@mui/icons-material/Savings'
 import LabelIcon from '@mui/icons-material/Label'
 import MenuIcon from '@mui/icons-material/Menu'
 import { useAuthContext } from '../contexts/AuthContext'
+import { SpendlyLogo } from './SpendlyLogo'
 
 const DRAWER_WIDTH = 240
 
@@ -57,7 +59,8 @@ export function AppShell({ children }: AppShellProps) {
 
   const drawerContent = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Toolbar sx={{ justifyContent: 'center' }}>
+      <Toolbar sx={{ justifyContent: 'center', gap: 1.5 }}>
+        <SpendlyLogo size={30} />
         <Typography variant="h6" color="primary.main" sx={{ fontWeight: 700 }}>
           Spendly
         </Typography>
@@ -110,13 +113,15 @@ export function AppShell({ children }: AppShellProps) {
           >
             <MenuIcon />
           </IconButton>
-          <Typography
-            variant="h6"
-            color="primary.main"
-            sx={{ flexGrow: 1, display: { xs: 'block', md: 'none' }, fontWeight: 700 }}
+          <Stack
+            direction="row"
+            sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1 }}
           >
-            Spendly
-          </Typography>
+            <SpendlyLogo size={28} />
+            <Typography variant="h6" color="primary.main" sx={{ fontWeight: 700 }}>
+              Spendly
+            </Typography>
+          </Stack>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'block' } }} />
           <IconButton size="large" onClick={e => setAnchorEl(e.currentTarget)}>
             <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main', fontSize: 14 }}>

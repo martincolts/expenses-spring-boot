@@ -33,7 +33,7 @@ public class ExpenseService {
     public Expense create(Long tenantId, CreateExpenseRequest req) {
         requireCategoryForTenant(tenantId, req.categoryId());
         OffsetDateTime now = OffsetDateTime.now();
-        ExpenseStatus status = req.paid() ? ExpenseStatus.PAID : ExpenseStatus.NOT_PAUD_YET;
+        ExpenseStatus status = req.paid() ? ExpenseStatus.PAID : ExpenseStatus.PENDING;
         OffsetDateTime paidAt = req.paid() ? now : null;
         Expense expense = new Expense(
                 null,
@@ -102,6 +102,18 @@ public class ExpenseService {
     public Expense update(Long tenantId, Long id, UpdateExpenseRequest req) {
         Expense existing = getForTenant(tenantId, id);
         requireCategoryForTenant(tenantId, req.categoryId());
+        ExpenseStatus newStatus;
+        OffsetDateTime newPaidAt;
+        if (req.paid() && existing.status() != ExpenseStatus.PAID) {
+            newStatus = ExpenseStatus.PAID;
+            newPaidAt = OffsetDateTime.now();
+        } else if (!req.paid() && existing.status() == ExpenseStatus.PAID) {
+            newStatus = ExpenseStatus.PENDING;
+            newPaidAt = null;
+        } else {
+            newStatus = existing.status();
+            newPaidAt = existing.paidAt();
+        }
         Expense updated = new Expense(
                 existing.id(),
                 existing.tenant(),
@@ -109,10 +121,10 @@ public class ExpenseService {
                 req.description(),
                 req.amount(),
                 req.currency().toUpperCase(),
-                existing.status(),
+                newStatus,
                 req.incurredAt(),
                 existing.createdAt(),
-                existing.paidAt()
+                newPaidAt
         );
         return repository.save(updated);
     }
@@ -181,7 +193,7 @@ public class ExpenseService {
                 existing.description(),
                 existing.amount(),
                 existing.currency(),
-                ExpenseStatus.NOT_PAUD_YET,
+                ExpenseStatus.PENDING,
                 existing.incurredAt(),
                 existing.createdAt(),
                 null
