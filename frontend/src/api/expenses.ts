@@ -4,8 +4,24 @@ import type { Page } from '../types/page'
 
 const BASE = '/api/expenses'
 
-export async function fetchExpenses(page: number, size: number): Promise<Page<Expense>> {
-  const res = await apiFetch(`${BASE}?page=${page}&size=${size}`)
+export interface ExpenseFilters {
+  categoryId?: number | null
+  status?: 'PENDING' | 'PAID' | null
+  dateFrom?: string | null
+  dateTo?: string | null
+}
+
+export async function fetchExpenses(
+  page: number,
+  size: number,
+  filters: ExpenseFilters = {},
+): Promise<Page<Expense>> {
+  const params = new URLSearchParams({ page: String(page), size: String(size) })
+  if (filters.categoryId != null) params.set('categoryId', String(filters.categoryId))
+  if (filters.status) params.set('status', filters.status)
+  if (filters.dateFrom) params.set('dateFrom', `${filters.dateFrom}T00:00:00+00:00`)
+  if (filters.dateTo) params.set('dateTo', `${filters.dateTo}T23:59:59+00:00`)
+  const res = await apiFetch(`${BASE}?${params}`)
   if (!res.ok) throw new Error('Failed to fetch expenses')
   return res.json()
 }

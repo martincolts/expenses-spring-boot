@@ -9,7 +9,11 @@ import {
   Chip,
   CircularProgress,
   Container,
+  FormControl,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   Table,
   TableBody,
@@ -18,15 +22,19 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  TextField,
   Typography,
   Paper,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
-import { fetchExpenses } from '../api/expenses'
+import FilterListIcon from '@mui/icons-material/FilterList'
+import ClearIcon from '@mui/icons-material/Clear'
+import { fetchExpenses, type ExpenseFilters } from '../api/expenses'
 import type { Expense } from '../types/expense'
 import { NewExpenseModal } from '../components/NewExpenseModal'
 import { useDeleteExpense } from '../hooks/useDeleteExpense'
+import { useCategories } from '../hooks/useCategories'
 
 function formatAmount(amount: string, currency: string) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(parseFloat(amount))
@@ -85,15 +93,31 @@ function ExpenseCard({
   )
 }
 
+const EMPTY_FILTERS: ExpenseFilters = {
+  categoryId: null,
+  status: null,
+  dateFrom: null,
+  dateTo: null,
+}
+
+function hasActiveFilters(f: ExpenseFilters) {
+  return f.categoryId != null || f.status != null || f.dateFrom != null || f.dateTo != null
+}
+
 export function ExpensesPage() {
   const [selected, setSelected] = useState<Expense | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(20)
+  const [filters, setFilters] = useState<ExpenseFilters>(EMPTY_FILTERS)
+  const [showFilters, setShowFilters] = useState(false)
+
+  const { data: categoriesData } = useCategories()
+  const categories = categoriesData ?? []
 
   const { data, isPending, isError } = useQuery({
-    queryKey: ['expenses', { page, rowsPerPage }],
-    queryFn: () => fetchExpenses(page, rowsPerPage),
+    queryKey: ['expenses', { page, rowsPerPage, ...filters }],
+    queryFn: () => fetchExpenses(page, rowsPerPage, filters),
   })
 
   const expenses = data?.content ?? []
@@ -106,6 +130,16 @@ export function ExpensesPage() {
     setPage(0)
   }
 
+  function setFilter<K extends keyof ExpenseFilters>(key: K, value: ExpenseFilters[K]) {
+    setFilters(prev => ({ ...prev, [key]: value || null }))
+    setPage(0)
+  }
+
+  function clearFilters() {
+    setFilters(EMPTY_FILTERS)
+    setPage(0)
+  }
+
   const paginationProps = {
     count: totalElements,
     page,
@@ -115,6 +149,8 @@ export function ExpensesPage() {
     rowsPerPageOptions: [10, 20, 50],
   }
 
+  const active = hasActiveFilters(filters)
+
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
       <Stack spacing={{ xs: 2, md: 3 }}>
@@ -122,15 +158,98 @@ export function ExpensesPage() {
           <Typography variant="h5" sx={{ fontWeight: 700, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
             Expenses
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setCreateOpen(true)}
-            size="medium"
-          >
-            Add
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant={active ? 'contained' : 'outlined'}
+              startIcon={<FilterListIcon />}
+              onClick={() => setShowFilters(v => !v)}
+              size="medium"
+              color={active ? 'primary' : 'inherit'}
+            >
+              Filter{active ? 's on' : ''}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreateOpen(true)}
+              size="medium"
+            >
+              Add
+            </Button>
+          </Stack>
         </Stack>
+
+        {showFilters && (
+          <Paper
+            elevation={0}
+            sx={{ p: { xs: 2, md: 2.5 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
+          >
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={2}
+              sx={{ flexWrap: 'wrap', alignItems: { sm: 'center' } }}
+            >
+              <FormControl size="small" sx={{ minWidth: 160 }}>
+                <InputLabel>Category</InputLabel>
+                <Select
+                  label="Category"
+                  value={filters.categoryId ?? ''}
+                  onChange={e => setFilter('categoryId', e.target.value ? Number(e.target.value) : null)}
+                >
+                  <MenuItem value="">All categories</MenuItem>
+                  {categories.map(c => (
+                    <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl size="small" sx={{ minWidth: 140 }}>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  label="Status"
+                  value={filters.status ?? ''}
+                  onChange={e => setFilter('status', (e.target.value as ExpenseFilters['status']) || null)}
+                >
+                  <MenuItem value="">All statuses</MenuItem>
+                  <MenuItem value="PENDING">Pending</MenuItem>
+                  <MenuItem value="PAID">Paid</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="From"
+                type="date"
+                size="small"
+                InputLabelProps={{ shrink: true }}
+                value={filters.dateFrom ?? ''}
+                onChange={e => setFilter('dateFrom', e.target.value || null)}
+                sx={{ minWidth: 150 }}
+              />
+
+              <TextField
+                label="To"
+                type="date"
+                size="small"
+                InputLabelProps={{ shrink: true }}
+                value={filters.dateTo ?? ''}
+                onChange={e => setFilter('dateTo', e.target.value || null)}
+                inputProps={{ min: filters.dateFrom ?? undefined }}
+                sx={{ minWidth: 150 }}
+              />
+
+              {active && (
+                <Button
+                  size="small"
+                  startIcon={<ClearIcon />}
+                  onClick={clearFilters}
+                  color="inherit"
+                >
+                  Clear
+                </Button>
+              )}
+            </Stack>
+          </Paper>
+        )}
 
         <NewExpenseModal open={createOpen} onClose={() => setCreateOpen(false)} />
         <NewExpenseModal
@@ -151,7 +270,9 @@ export function ExpensesPage() {
 
         {!isPending && !isError && expenses.length === 0 && (
           <Box sx={{ py: 8, textAlign: 'center' }}>
-            <Typography color="text.secondary">No expenses yet.</Typography>
+            <Typography color="text.secondary">
+              {active ? 'No expenses match the current filters.' : 'No expenses yet.'}
+            </Typography>
           </Box>
         )}
 

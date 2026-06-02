@@ -174,4 +174,97 @@ class ExpenseRepositoryTest {
         assertThatThrownBy(() -> repository.save(orphan))
                 .isInstanceOf(DataAccessException.class);
     }
+
+    @Test
+    void findByTenantIdFilteredPaged_filtersByCategory() {
+        Long tenantId = createTenant("cat-filter@example.com");
+        Long catA = createCategory(tenantId, "Food");
+        Long catB = createCategory(tenantId, "Travel");
+        Expense food = repository.save(newExpense(tenantId, catA, ExpenseStatus.NOT_PAUD_YET,
+                OffsetDateTime.parse("2026-05-01T10:00:00Z")));
+        repository.save(newExpense(tenantId, catB, ExpenseStatus.NOT_PAUD_YET,
+                OffsetDateTime.parse("2026-05-02T10:00:00Z")));
+
+        var results = repository.findByTenantIdFilteredPaged(tenantId, catA, null, null, null, 20, 0L);
+
+        assertThat(results).extracting(Expense::id).containsExactly(food.id());
+    }
+
+    @Test
+    void findByTenantIdFilteredPaged_filtersByStatus() {
+        Long tenantId = createTenant("status-filter@example.com");
+        Long cat = createCategory(tenantId, "Food");
+        Expense paid = repository.save(newExpense(tenantId, cat, ExpenseStatus.PAID,
+                OffsetDateTime.parse("2026-05-01T10:00:00Z")));
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+                OffsetDateTime.parse("2026-05-02T10:00:00Z")));
+
+        var results = repository.findByTenantIdFilteredPaged(tenantId, null, "PAID", null, null, 20, 0L);
+
+        assertThat(results).extracting(Expense::id).containsExactly(paid.id());
+    }
+
+    @Test
+    void findByTenantIdFilteredPaged_filtersByDateRange() {
+        Long tenantId = createTenant("date-filter@example.com");
+        Long cat = createCategory(tenantId, "Food");
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+                OffsetDateTime.parse("2026-03-01T10:00:00Z")));
+        Expense inRange = repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+                OffsetDateTime.parse("2026-05-15T10:00:00Z")));
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+                OffsetDateTime.parse("2026-08-01T10:00:00Z")));
+
+        var results = repository.findByTenantIdFilteredPaged(
+                tenantId, null, null,
+                OffsetDateTime.parse("2026-05-01T00:00:00Z"),
+                OffsetDateTime.parse("2026-05-31T23:59:59Z"),
+                20, 0L);
+
+        assertThat(results).extracting(Expense::id).containsExactly(inRange.id());
+    }
+
+    @Test
+    void findByTenantIdFilteredPaged_noFilters_returnsAll() {
+        Long tenantId = createTenant("no-filter@example.com");
+        Long cat = createCategory(tenantId, "Food");
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.PAID,
+                OffsetDateTime.parse("2026-05-01T10:00:00Z")));
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+                OffsetDateTime.parse("2026-05-09T10:00:00Z")));
+
+        var results = repository.findByTenantIdFilteredPaged(tenantId, null, null, null, null, 20, 0L);
+
+        assertThat(results).hasSize(2);
+    }
+
+    @Test
+    void countByTenantIdFiltered_matchesFilteredResults() {
+        Long tenantId = createTenant("count-filter@example.com");
+        Long cat = createCategory(tenantId, "Food");
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.PAID,
+                OffsetDateTime.parse("2026-05-01T10:00:00Z")));
+        repository.save(newExpense(tenantId, cat, ExpenseStatus.NOT_PAUD_YET,
+                OffsetDateTime.parse("2026-05-09T10:00:00Z")));
+
+        long count = repository.countByTenantIdFiltered(tenantId, null, "PAID", null, null);
+
+        assertThat(count).isEqualTo(1L);
+    }
+
+    @Test
+    void findAllFilteredPaged_returnsAcrossAllTenants() {
+        Long tenantA = createTenant("all-a@example.com");
+        Long tenantB = createTenant("all-b@example.com");
+        Long catA = createCategory(tenantA, "Food");
+        Long catB = createCategory(tenantB, "Food");
+        Expense expA = repository.save(newExpense(tenantA, catA, ExpenseStatus.PAID,
+                OffsetDateTime.parse("2026-05-01T10:00:00Z")));
+        Expense expB = repository.save(newExpense(tenantB, catB, ExpenseStatus.PAID,
+                OffsetDateTime.parse("2026-05-02T10:00:00Z")));
+
+        var results = repository.findAllFilteredPaged(null, "PAID", null, null, 20, 0L);
+
+        assertThat(results).extracting(Expense::id).containsExactlyInAnyOrder(expA.id(), expB.id());
+    }
 }

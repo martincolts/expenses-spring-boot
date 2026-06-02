@@ -121,6 +121,48 @@ class ExpenseServiceTest {
     }
 
     @Test
+    void listForTenantFiltered_passesNullsAndStatusNameToRepository() {
+        Expense a = expense(1L, 7L, 3L, ExpenseStatus.PAID);
+        OffsetDateTime from = OffsetDateTime.parse("2026-01-01T00:00:00Z");
+        OffsetDateTime to = OffsetDateTime.parse("2026-12-31T23:59:59Z");
+        given(repository.findByTenantIdFilteredPaged(7L, 3L, "PAID", from, to, 20, 0L))
+                .willReturn(List.of(a));
+        given(repository.countByTenantIdFiltered(7L, 3L, "PAID", from, to)).willReturn(1L);
+
+        var page = service.listForTenant(7L, 3L, ExpenseStatus.PAID, from, to,
+                org.springframework.data.domain.PageRequest.of(0, 20));
+
+        assertThat(page.getContent()).containsExactly(a);
+        assertThat(page.getTotalElements()).isEqualTo(1L);
+    }
+
+    @Test
+    void listForTenantFiltered_mapsNullStatusToNull() {
+        given(repository.findByTenantIdFilteredPaged(7L, null, null, null, null, 20, 0L))
+                .willReturn(List.of());
+        given(repository.countByTenantIdFiltered(7L, null, null, null, null)).willReturn(0L);
+
+        service.listForTenant(7L, null, null, null, null,
+                org.springframework.data.domain.PageRequest.of(0, 20));
+
+        org.mockito.Mockito.verify(repository)
+                .findByTenantIdFilteredPaged(7L, null, null, null, null, 20, 0L);
+    }
+
+    @Test
+    void listAllFiltered_passesFiltersToRepository() {
+        Expense a = expense(1L, 7L, 3L, ExpenseStatus.NOT_PAUD_YET);
+        given(repository.findAllFilteredPaged(3L, "NOT_PAUD_YET", null, null, 20, 0L))
+                .willReturn(List.of(a));
+        given(repository.countAllFiltered(3L, "NOT_PAUD_YET", null, null)).willReturn(1L);
+
+        var page = service.listAll(3L, ExpenseStatus.NOT_PAUD_YET, null, null,
+                org.springframework.data.domain.PageRequest.of(0, 20));
+
+        assertThat(page.getContent()).containsExactly(a);
+    }
+
+    @Test
     void getForTenant_returnsExpense_whenOwned() {
         Expense e = expense(1L, 7L, 3L, ExpenseStatus.PAID);
         given(repository.findByIdAndTenantId(1L, 7L)).willReturn(Optional.of(e));

@@ -60,12 +60,32 @@ public class ExpenseService {
         return new PageImpl<>(content, pageable, total);
     }
 
+    public Page<Expense> listForTenant(Long tenantId, Long categoryId, ExpenseStatus status,
+                                       OffsetDateTime dateFrom, OffsetDateTime dateTo, Pageable pageable) {
+        String statusStr = status != null ? status.name() : null;
+        List<Expense> content = repository.findByTenantIdFilteredPaged(
+                tenantId, categoryId, statusStr, dateFrom, dateTo,
+                pageable.getPageSize(), pageable.getOffset());
+        long total = repository.countByTenantIdFiltered(tenantId, categoryId, statusStr, dateFrom, dateTo);
+        return new PageImpl<>(content, pageable, total);
+    }
+
     public List<Expense> listAll() {
         return repository.findAll();
     }
 
     public Page<Expense> listAll(Pageable pageable) {
         return repository.findAll(pageable);
+    }
+
+    public Page<Expense> listAll(Long categoryId, ExpenseStatus status,
+                                 OffsetDateTime dateFrom, OffsetDateTime dateTo, Pageable pageable) {
+        String statusStr = status != null ? status.name() : null;
+        List<Expense> content = repository.findAllFilteredPaged(
+                categoryId, statusStr, dateFrom, dateTo,
+                pageable.getPageSize(), pageable.getOffset());
+        long total = repository.countAllFiltered(categoryId, statusStr, dateFrom, dateTo);
+        return new PageImpl<>(content, pageable, total);
     }
 
     public Expense getForTenant(Long tenantId, Long id) {

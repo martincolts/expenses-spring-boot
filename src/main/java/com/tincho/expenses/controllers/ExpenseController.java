@@ -5,14 +5,17 @@ import com.tincho.expenses.controllers.dto.ExpenseResponse;
 import com.tincho.expenses.controllers.dto.PageResponse;
 import com.tincho.expenses.controllers.dto.UpdateExpenseRequest;
 import com.tincho.expenses.model.Expense;
+import com.tincho.expenses.model.ExpenseStatus;
 import com.tincho.expenses.security.TenantUserDetails;
 import com.tincho.expenses.services.ExpenseService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import java.time.OffsetDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -50,10 +53,14 @@ class ExpenseController {
     PageResponse<ExpenseResponse> list(
             @AuthenticationPrincipal TenantUserDetails principal,
             @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) ExpenseStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime dateTo) {
         Page<Expense> expenses = ADMIN.equals(principal.getRole())
-                ? service.listAll(PageRequest.of(page, size))
-                : service.listForTenant(principal.getId(), PageRequest.of(page, size));
+                ? service.listAll(categoryId, status, dateFrom, dateTo, PageRequest.of(page, size))
+                : service.listForTenant(principal.getId(), categoryId, status, dateFrom, dateTo, PageRequest.of(page, size));
         return PageResponse.from(expenses.map(ExpenseResponse::from));
     }
 

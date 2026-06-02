@@ -31,6 +31,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jdbc.core.mapping.AggregateReference;
 
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+
 @ExtendWith(MockitoExtension.class)
 class ExpenseControllerTest {
 
@@ -60,13 +63,13 @@ class ExpenseControllerTest {
         TenantUserDetails principal = tenantPrincipal(7L);
         Expense a = expense(1L, 7L, 3L, ExpenseStatus.PAID);
         Expense b = expense(2L, 7L, 3L, ExpenseStatus.NOT_PAUD_YET);
-        given(service.listForTenant(7L, PageRequest.of(0, 20)))
+        given(service.listForTenant(eq(7L), isNull(), isNull(), isNull(), isNull(), eq(PageRequest.of(0, 20))))
                 .willReturn(new PageImpl<>(List.of(a, b)));
 
-        PageResponse<ExpenseResponse> response = controller.list(principal, 0, 20);
+        PageResponse<ExpenseResponse> response = controller.list(principal, 0, 20, null, null, null, null);
 
-        verify(service).listForTenant(7L, PageRequest.of(0, 20));
-        verify(service, never()).listAll(PageRequest.of(0, 20));
+        verify(service).listForTenant(eq(7L), isNull(), isNull(), isNull(), isNull(), eq(PageRequest.of(0, 20)));
+        verify(service, never()).listAll(any(), any(), any(), any(), any());
         assertThat(response.content()).containsExactly(ExpenseResponse.from(a), ExpenseResponse.from(b));
     }
 
@@ -74,12 +77,26 @@ class ExpenseControllerTest {
     void list_callsListAll_whenAdmin() {
         TenantUserDetails principal = adminPrincipal(99L);
         Expense a = expense(1L, 7L, 3L, ExpenseStatus.PAID);
-        given(service.listAll(PageRequest.of(0, 20))).willReturn(new PageImpl<>(List.of(a)));
+        given(service.listAll(isNull(), isNull(), isNull(), isNull(), eq(PageRequest.of(0, 20))))
+                .willReturn(new PageImpl<>(List.of(a)));
 
-        controller.list(principal, 0, 20);
+        controller.list(principal, 0, 20, null, null, null, null);
 
-        verify(service).listAll(PageRequest.of(0, 20));
-        verify(service, never()).listForTenant(anyLong(), any());
+        verify(service).listAll(isNull(), isNull(), isNull(), isNull(), eq(PageRequest.of(0, 20)));
+        verify(service, never()).listForTenant(anyLong(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void list_passesFilters_toServiceForTenant() {
+        TenantUserDetails principal = tenantPrincipal(7L);
+        OffsetDateTime from = OffsetDateTime.parse("2026-01-01T00:00:00Z");
+        OffsetDateTime to = OffsetDateTime.parse("2026-12-31T23:59:59Z");
+        given(service.listForTenant(eq(7L), eq(3L), eq(ExpenseStatus.PAID), eq(from), eq(to), eq(PageRequest.of(0, 20))))
+                .willReturn(new PageImpl<>(List.of()));
+
+        controller.list(principal, 0, 20, 3L, ExpenseStatus.PAID, from, to);
+
+        verify(service).listForTenant(7L, 3L, ExpenseStatus.PAID, from, to, PageRequest.of(0, 20));
     }
 
     @Test

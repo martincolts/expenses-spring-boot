@@ -223,6 +223,97 @@ class ExpenseIntegrationTest {
     }
 
     @Test
+    void list_filtersByCategory() {
+        LoginResponse login = registerAndLogin("Acme", "filter-cat@example.com", "plaintext1");
+        CategoryResponse food = createCategory(login.token(), "Food");
+        CategoryResponse travel = createCategory(login.token(), "Travel");
+        createExpense(login.token(), food.id(), "Lunch", false);
+        createExpense(login.token(), travel.id(), "Flight", false);
+
+        client.get().uri(u -> u.path("/api/expenses")
+                        .queryParam("categoryId", food.id()).build())
+                .header("Authorization", "Bearer " + login.token())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<PageResponse<ExpenseResponse>>() {})
+                .value(page -> assertThat(page.content())
+                        .extracting(ExpenseResponse::description)
+                        .containsExactly("Lunch"));
+    }
+
+    @Test
+    void list_filtersByStatus() {
+        LoginResponse login = registerAndLogin("Acme", "filter-status@example.com", "plaintext1");
+        CategoryResponse cat = createCategory(login.token(), "Food");
+        createExpense(login.token(), cat.id(), "Paid expense", true);
+        createExpense(login.token(), cat.id(), "Pending expense", false);
+
+        client.get().uri(u -> u.path("/api/expenses")
+                        .queryParam("status", "PAID").build())
+                .header("Authorization", "Bearer " + login.token())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<PageResponse<ExpenseResponse>>() {})
+                .value(page -> assertThat(page.content())
+                        .extracting(ExpenseResponse::description)
+                        .containsExactly("Paid expense"));
+    }
+
+    @Test
+    void list_filtersByDateRange() {
+        LoginResponse login = registerAndLogin("Acme", "filter-date@example.com", "plaintext1");
+        CategoryResponse cat = createCategory(login.token(), "Food");
+
+        client.post().uri("/api/expenses")
+                .header("Authorization", "Bearer " + login.token())
+                .body(new CreateExpenseRequest(cat.id(), "January",
+                        new BigDecimal("10.00"), "USD",
+                        OffsetDateTime.parse("2026-01-15T10:00:00Z"), false))
+                .exchange().expectStatus().isCreated();
+
+        client.post().uri("/api/expenses")
+                .header("Authorization", "Bearer " + login.token())
+                .body(new CreateExpenseRequest(cat.id(), "May",
+                        new BigDecimal("10.00"), "USD",
+                        OffsetDateTime.parse("2026-05-15T10:00:00Z"), false))
+                .exchange().expectStatus().isCreated();
+
+        client.get().uri(u -> u.path("/api/expenses")
+                        .queryParam("dateFrom", "2026-05-01T00:00:00Z")
+                        .queryParam("dateTo", "2026-05-31T23:59:59Z")
+                        .build())
+                .header("Authorization", "Bearer " + login.token())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<PageResponse<ExpenseResponse>>() {})
+                .value(page -> assertThat(page.content())
+                        .extracting(ExpenseResponse::description)
+                        .containsExactly("May"));
+    }
+
+    @Test
+    void list_combinesMultipleFilters() {
+        LoginResponse login = registerAndLogin("Acme", "filter-combined@example.com", "plaintext1");
+        CategoryResponse food = createCategory(login.token(), "Food");
+        CategoryResponse travel = createCategory(login.token(), "Travel");
+        createExpense(login.token(), food.id(), "Food paid", true);
+        createExpense(login.token(), food.id(), "Food pending", false);
+        createExpense(login.token(), travel.id(), "Travel paid", true);
+
+        client.get().uri(u -> u.path("/api/expenses")
+                        .queryParam("categoryId", food.id())
+                        .queryParam("status", "PAID")
+                        .build())
+                .header("Authorization", "Bearer " + login.token())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<PageResponse<ExpenseResponse>>() {})
+                .value(page -> assertThat(page.content())
+                        .extracting(ExpenseResponse::description)
+                        .containsExactly("Food paid"));
+    }
+
+    @Test
     void list_returnsAllExpenses_forAdmin() {
         LoginResponse a = registerAndLogin("A", "list-admin-a@example.com", "plaintext1");
         LoginResponse b = registerAndLogin("B", "list-admin-b@example.com", "plaintext1");
