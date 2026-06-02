@@ -38,13 +38,17 @@ import FilterListIcon from '@mui/icons-material/FilterList'
 import ClearIcon from '@mui/icons-material/Clear'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
+import CategoryIcon from '@mui/icons-material/Category'
 import { fetchExpenses, type ExpenseFilters } from '../api/expenses'
 import type { Expense } from '../types/expense'
+import type { Category } from '../types/category'
 import { NewExpenseModal } from '../components/NewExpenseModal'
 import { useDeleteExpense } from '../hooks/useDeleteExpense'
 import { useMarkExpensePaid } from '../hooks/useMarkExpensePaid'
 import { useMarkExpenseUnpaid } from '../hooks/useMarkExpenseUnpaid'
 import { useCategories } from '../hooks/useCategories'
+import { getCategoryIcon } from '../constants/categoryIcons'
+import { getCategoryColor } from '../constants/categoryColors'
 
 function formatAmount(amount: string, currency: string) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(parseFloat(amount))
@@ -54,14 +58,47 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
 }
 
+function CategoryBadge({ category }: { category: Category | undefined }) {
+  const color = getCategoryColor(category?.colorId)
+  const Icon = getCategoryIcon(category?.iconId)
+  return (
+    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+      <Box
+        sx={{
+          width: 28,
+          height: 28,
+          borderRadius: 1.5,
+          bgcolor: color,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {Icon
+          ? <Icon sx={{ color: '#fff', fontSize: 16 }} />
+          : <CategoryIcon sx={{ color: '#fff', fontSize: 16 }} />
+        }
+      </Box>
+      {category && (
+        <Typography variant="body2" noWrap>
+          {category.name}
+        </Typography>
+      )}
+    </Stack>
+  )
+}
+
 function ExpenseCard({
   expense,
+  category,
   onDelete,
   onMarkPaid,
   onMarkPending,
   onClick,
 }: {
   expense: Expense
+  category: Category | undefined
   onDelete: (expense: Expense) => void
   onMarkPaid: (expense: Expense) => void
   onMarkPending: (expense: Expense) => void
@@ -76,9 +113,12 @@ function ExpenseCard({
               <Typography variant="body1" sx={{ fontWeight: 500 }} noWrap>
                 {expense.description}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {formatDate(expense.incurredAt)}
-              </Typography>
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mt: 0.25 }}>
+                <CategoryBadge category={category} />
+                <Typography variant="caption" color="text.secondary">
+                  {formatDate(expense.incurredAt)}
+                </Typography>
+              </Stack>
             </Box>
             <Stack sx={{ alignItems: 'flex-end' }} spacing={0.5}>
               <Typography variant="body1" sx={{ fontWeight: 600 }}>
@@ -153,6 +193,7 @@ export function ExpensesPage() {
 
   const { data: categoriesData } = useCategories()
   const categories = categoriesData ?? []
+  const categoryMap = new Map(categories.map(c => [c.id, c]))
 
   const { data, isPending, isError } = useQuery({
     queryKey: ['expenses', { page, rowsPerPage, ...filters }],
@@ -400,6 +441,7 @@ export function ExpensesPage() {
                 <ExpenseCard
                   key={e.id}
                   expense={e}
+                  category={e.categoryId != null ? categoryMap.get(e.categoryId) : undefined}
                   onDelete={setDeleteTarget}
                   onMarkPaid={setPayTarget}
                   onMarkPending={setUnpayTarget}
@@ -419,6 +461,7 @@ export function ExpensesPage() {
                 <TableHead>
                   <TableRow>
                     <TableCell>Description</TableCell>
+                    <TableCell>Category</TableCell>
                     <TableCell>Date</TableCell>
                     <TableCell align="right">Amount</TableCell>
                     <TableCell>Status</TableCell>
@@ -434,6 +477,9 @@ export function ExpensesPage() {
                       sx={{ cursor: 'pointer' }}
                     >
                       <TableCell>{e.description}</TableCell>
+                      <TableCell>
+                        <CategoryBadge category={e.categoryId != null ? categoryMap.get(e.categoryId) : undefined} />
+                      </TableCell>
                       <TableCell>{formatDate(e.incurredAt)}</TableCell>
                       <TableCell align="right">{formatAmount(e.amount, e.currency)}</TableCell>
                       <TableCell>
