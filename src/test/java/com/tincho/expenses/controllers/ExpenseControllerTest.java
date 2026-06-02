@@ -2,6 +2,7 @@ package com.tincho.expenses.controllers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.verify;
 
 import com.tincho.expenses.controllers.dto.CreateExpenseRequest;
 import com.tincho.expenses.controllers.dto.ExpenseResponse;
+import com.tincho.expenses.controllers.dto.PageResponse;
 import com.tincho.expenses.controllers.dto.UpdateExpenseRequest;
 import com.tincho.expenses.model.Category;
 import com.tincho.expenses.model.Expense;
@@ -25,6 +27,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jdbc.core.mapping.AggregateReference;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,25 +60,26 @@ class ExpenseControllerTest {
         TenantUserDetails principal = tenantPrincipal(7L);
         Expense a = expense(1L, 7L, 3L, ExpenseStatus.PAID);
         Expense b = expense(2L, 7L, 3L, ExpenseStatus.NOT_PAUD_YET);
-        given(service.listForTenant(7L)).willReturn(List.of(a, b));
+        given(service.listForTenant(7L, PageRequest.of(0, 20)))
+                .willReturn(new PageImpl<>(List.of(a, b)));
 
-        List<ExpenseResponse> response = controller.list(principal);
+        PageResponse<ExpenseResponse> response = controller.list(principal, 0, 20);
 
-        verify(service).listForTenant(7L);
-        verify(service, never()).listAll();
-        assertThat(response).containsExactly(ExpenseResponse.from(a), ExpenseResponse.from(b));
+        verify(service).listForTenant(7L, PageRequest.of(0, 20));
+        verify(service, never()).listAll(PageRequest.of(0, 20));
+        assertThat(response.content()).containsExactly(ExpenseResponse.from(a), ExpenseResponse.from(b));
     }
 
     @Test
     void list_callsListAll_whenAdmin() {
         TenantUserDetails principal = adminPrincipal(99L);
         Expense a = expense(1L, 7L, 3L, ExpenseStatus.PAID);
-        given(service.listAll()).willReturn(List.of(a));
+        given(service.listAll(PageRequest.of(0, 20))).willReturn(new PageImpl<>(List.of(a)));
 
-        controller.list(principal);
+        controller.list(principal, 0, 20);
 
-        verify(service).listAll();
-        verify(service, never()).listForTenant(anyLong());
+        verify(service).listAll(PageRequest.of(0, 20));
+        verify(service, never()).listForTenant(anyLong(), any());
     }
 
     @Test

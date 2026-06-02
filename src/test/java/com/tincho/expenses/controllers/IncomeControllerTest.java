@@ -1,28 +1,33 @@
 package com.tincho.expenses.controllers;
 
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jdbc.core.mapping.AggregateReference;
 
 import com.tincho.expenses.controllers.dto.CreateIncomeRequest;
 import com.tincho.expenses.controllers.dto.IncomeResponse;
+import com.tincho.expenses.controllers.dto.PageResponse;
 import com.tincho.expenses.model.Income;
 import com.tincho.expenses.model.Tenant;
 import com.tincho.expenses.security.TenantUserDetails;
 import com.tincho.expenses.services.IncomeService;
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.List;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.jdbc.core.mapping.AggregateReference;
 
 @ExtendWith(MockitoExtension.class)
 class IncomeControllerTest {
@@ -51,25 +56,26 @@ class IncomeControllerTest {
         TenantUserDetails principal = tenantPrincipal(7L);
         Income a = income(1L, 7L);
         Income b = income(2L, 7L);
-        given(service.listForTenant(7L)).willReturn(List.of(a, b));
+        given(service.listForTenant(7L, PageRequest.of(0, 20)))
+                .willReturn(new PageImpl<>(List.of(a, b)));
 
-        List<IncomeResponse> response = controller.list(principal);
+        PageResponse<IncomeResponse> response = controller.list(principal, 0, 20);
 
-        verify(service).listForTenant(7L);
-        verify(service, never()).listAll();
-        assertThat(response).containsExactly(IncomeResponse.from(a), IncomeResponse.from(b));
+        verify(service).listForTenant(7L, PageRequest.of(0, 20));
+        verify(service, never()).listAll(PageRequest.of(0, 20));
+        assertThat(response.content()).containsExactly(IncomeResponse.from(a), IncomeResponse.from(b));
     }
 
     @Test
     void list_callsListAll_whenAdmin() {
         TenantUserDetails principal = adminPrincipal(99L);
         Income a = income(1L, 7L);
-        given(service.listAll()).willReturn(List.of(a));
+        given(service.listAll(PageRequest.of(0, 20))).willReturn(new PageImpl<>(List.of(a)));
 
-        controller.list(principal);
+        controller.list(principal, 0, 20);
 
-        verify(service).listAll();
-        verify(service, never()).listForTenant(anyLong());
+        verify(service).listAll(PageRequest.of(0, 20));
+        verify(service, never()).listForTenant(anyLong(), any());
     }
 
     @Test

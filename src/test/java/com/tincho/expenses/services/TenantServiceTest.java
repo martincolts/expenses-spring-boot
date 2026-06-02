@@ -33,6 +33,9 @@ class TenantServiceTest {
     @Mock
     PasswordEncoder passwordEncoder;
 
+    @Mock
+    DefaultCategorySeeder defaultCategorySeeder;
+
     @InjectMocks
     TenantService service;
 

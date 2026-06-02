@@ -8,9 +8,9 @@ import com.tincho.expenses.controllers.dto.CreateTenantRequest;
 import com.tincho.expenses.controllers.dto.IncomeResponse;
 import com.tincho.expenses.controllers.dto.LoginRequest;
 import com.tincho.expenses.controllers.dto.LoginResponse;
+import com.tincho.expenses.controllers.dto.PageResponse;
 import com.tincho.expenses.repositories.IncomeRepository;
 import java.math.BigDecimal;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -143,8 +143,8 @@ class IncomeIntegrationTest {
                 .header("Authorization", "Bearer " + a.token())
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<IncomeResponse>>() {})
-                .value(list -> assertThat(list)
+                .expectBody(new ParameterizedTypeReference<PageResponse<IncomeResponse>>() {})
+                .value(page -> assertThat(page.content())
                         .extracting(IncomeResponse::amount)
                         .containsExactlyInAnyOrder(
                                 new BigDecimal("10.00"), new BigDecimal("20.00")));
@@ -162,8 +162,8 @@ class IncomeIntegrationTest {
                 .header("Authorization", "Bearer " + adminToken)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<IncomeResponse>>() {})
-                .value(list -> assertThat(list).hasSize(2));
+                .expectBody(new ParameterizedTypeReference<PageResponse<IncomeResponse>>() {})
+                .value(page -> assertThat(page.content()).hasSize(2));
     }
 
     // --- get ---

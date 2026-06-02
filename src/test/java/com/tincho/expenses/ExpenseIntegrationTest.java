@@ -10,12 +10,12 @@ import com.tincho.expenses.controllers.dto.CreateTenantRequest;
 import com.tincho.expenses.controllers.dto.ExpenseResponse;
 import com.tincho.expenses.controllers.dto.LoginRequest;
 import com.tincho.expenses.controllers.dto.LoginResponse;
+import com.tincho.expenses.controllers.dto.PageResponse;
 import com.tincho.expenses.controllers.dto.UpdateExpenseRequest;
 import com.tincho.expenses.model.ExpenseStatus;
 import com.tincho.expenses.repositories.ExpenseRepository;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -216,8 +216,8 @@ class ExpenseIntegrationTest {
                 .header("Authorization", "Bearer " + a.token())
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<ExpenseResponse>>() {})
-                .value(list -> assertThat(list)
+                .expectBody(new ParameterizedTypeReference<PageResponse<ExpenseResponse>>() {})
+                .value(page -> assertThat(page.content())
                         .extracting(ExpenseResponse::description)
                         .containsExactlyInAnyOrder("A-Lunch", "A-Dinner"));
     }
@@ -236,8 +236,8 @@ class ExpenseIntegrationTest {
                 .header("Authorization", "Bearer " + adminToken)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<ExpenseResponse>>() {})
-                .value(list -> assertThat(list).hasSize(2));
+                .expectBody(new ParameterizedTypeReference<PageResponse<ExpenseResponse>>() {})
+                .value(page -> assertThat(page.content()).hasSize(2));
     }
 
     // --- get ---

@@ -8,6 +8,7 @@ import com.tincho.expenses.controllers.dto.CreateCategoryRequest;
 import com.tincho.expenses.controllers.dto.CreateTenantRequest;
 import com.tincho.expenses.controllers.dto.LoginRequest;
 import com.tincho.expenses.controllers.dto.LoginResponse;
+import com.tincho.expenses.controllers.dto.PageResponse;
 import com.tincho.expenses.controllers.dto.UpdateCategoryRequest;
 import com.tincho.expenses.repositories.CategoryRepository;
 import java.util.List;
@@ -122,6 +123,7 @@ class CategoryIntegrationTest {
     @Test
     void create_returns400_whenNameBlank() {
         LoginResponse login = registerAndLogin("Acme", "blank@example.com", "plaintext1");
+        long before = repository.countByTenantId(login.id());
 
         client.post().uri("/api/categories")
                 .header("Authorization", "Bearer " + login.token())
@@ -129,7 +131,7 @@ class CategoryIntegrationTest {
                 .exchange()
                 .expectStatus().isBadRequest();
 
-        assertThat(repository.findByTenantId(login.id())).isEmpty();
+        assertThat(repository.countByTenantId(login.id())).isEqualTo(before);
     }
 
     @Test
@@ -165,10 +167,12 @@ class CategoryIntegrationTest {
                 .header("Authorization", "Bearer " + a.token())
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<CategoryResponse>>() {})
-                .value(list -> assertThat(list)
-                        .extracting(CategoryResponse::name)
-                        .containsExactlyInAnyOrder("A-Food", "A-Travel"));
+                .expectBody(new ParameterizedTypeReference<PageResponse<CategoryResponse>>() {})
+                .value(page -> {
+                    List<String> names = page.content().stream().map(CategoryResponse::name).toList();
+                    assertThat(names).contains("A-Food", "A-Travel");
+                    assertThat(names).doesNotContain("B-Food");
+                });
     }
 
     @Test
@@ -179,12 +183,14 @@ class CategoryIntegrationTest {
         createCategory(b.token(), "B-Food");
         String adminToken = insertAdminAndGetToken();
 
-        client.get().uri("/api/categories")
+        client.get().uri("/api/categories?size=100")
                 .header("Authorization", "Bearer " + adminToken)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<CategoryResponse>>() {})
-                .value(list -> assertThat(list).hasSize(2));
+                .expectBody(new ParameterizedTypeReference<PageResponse<CategoryResponse>>() {})
+                .value(page -> assertThat(page.content())
+                        .extracting(CategoryResponse::name)
+                        .contains("A-Food", "B-Food"));
     }
 
     @Test

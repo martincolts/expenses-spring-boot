@@ -22,6 +22,8 @@ Project-level Claude skills live under [.claude/skills/](.claude/skills/). Consu
 - **fix-tests-after-backend-change** — checklist for updating all test files after any Java record, DTO, or service signature changes. Use whenever a constructor parameter is added, removed, or reordered.
 - **formik** — `useFormik` + Yup schema validation + MUI TextField wiring. Use whenever adding any form to the React frontend.
 - **responsive-mobile-first** — mobile-first layout rules, MUI breakpoint object syntax, responsive Grid2/Stack/Container patterns, table→card fallback. Use whenever adding or modifying any frontend component or page.
+- **backend-pagination** — adding server-side pagination to a Spring Data JDBC list endpoint: repository `LIMIT/OFFSET` + `COUNT` queries, `PageImpl<T>` assembly in the service, `PageResponse<T>` DTO in the controller, and how to update both controller unit tests and integration tests. Use whenever adding or modifying a list endpoint.
+- **table-pagination** — server-side pagination for every table: `Page<T>` response type, query key pattern, MUI `TablePagination` on both desktop table and mobile card stack. Use whenever adding or touching any list/table page in the frontend.
 
 ## Stack
 

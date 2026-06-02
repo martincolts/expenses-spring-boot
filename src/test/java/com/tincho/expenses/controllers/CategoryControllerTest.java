@@ -2,6 +2,7 @@ package com.tincho.expenses.controllers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.verify;
 
 import com.tincho.expenses.controllers.dto.CategoryResponse;
 import com.tincho.expenses.controllers.dto.CreateCategoryRequest;
+import com.tincho.expenses.controllers.dto.PageResponse;
 import com.tincho.expenses.controllers.dto.UpdateCategoryRequest;
 import com.tincho.expenses.model.Category;
 import com.tincho.expenses.model.Tenant;
@@ -22,6 +24,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jdbc.core.mapping.AggregateReference;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,32 +55,34 @@ class CategoryControllerTest {
         TenantUserDetails principal = tenantPrincipal(7L);
         Category a = category(1L, 7L, "A");
         Category b = category(2L, 7L, "B");
-        given(service.listForTenant(7L)).willReturn(List.of(a, b));
+        given(service.listForTenant(7L, PageRequest.of(0, 20)))
+                .willReturn(new PageImpl<>(List.of(a, b)));
 
-        List<CategoryResponse> response = controller.list(principal);
+        PageResponse<CategoryResponse> response = controller.list(principal, 0, 20);
 
-        verify(service).listForTenant(7L);
-        verify(service, never()).listAll();
-        assertThat(response).containsExactly(CategoryResponse.from(a), CategoryResponse.from(b));
+        verify(service).listForTenant(7L, PageRequest.of(0, 20));
+        verify(service, never()).listAll(PageRequest.of(0, 20));
+        assertThat(response.content()).containsExactly(CategoryResponse.from(a), CategoryResponse.from(b));
     }
 
     @Test
     void list_callsListAll_whenAdmin() {
         TenantUserDetails principal = adminPrincipal(99L);
         Category a = category(1L, 7L, "A");
-        given(service.listAll()).willReturn(List.of(a));
+        given(service.listAll(PageRequest.of(0, 20))).willReturn(new PageImpl<>(List.of(a)));
 
-        controller.list(principal);
+        controller.list(principal, 0, 20);
 
-        verify(service).listAll();
-        verify(service, never()).listForTenant(anyLong());
+        verify(service).listAll(PageRequest.of(0, 20));
+        verify(service, never()).listForTenant(anyLong(), any());
     }
 
     @Test
     void list_returnsEmpty_whenServiceReturnsEmpty() {
-        given(service.listForTenant(7L)).willReturn(List.of());
+        given(service.listForTenant(7L, PageRequest.of(0, 20)))
+                .willReturn(new PageImpl<>(List.of()));
 
-        assertThat(controller.list(tenantPrincipal(7L))).isEmpty();
+        assertThat(controller.list(tenantPrincipal(7L), 0, 20).content()).isEmpty();
     }
 
     @Test

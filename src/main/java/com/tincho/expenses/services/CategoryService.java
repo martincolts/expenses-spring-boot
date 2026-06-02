@@ -1,5 +1,15 @@
 package com.tincho.expenses.services;
 
+import java.time.OffsetDateTime;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jdbc.core.mapping.AggregateReference;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tincho.expenses.controllers.dto.CreateCategoryRequest;
 import com.tincho.expenses.controllers.dto.UpdateCategoryRequest;
 import com.tincho.expenses.exceptions.CategoryNameAlreadyExistsException;
@@ -7,12 +17,8 @@ import com.tincho.expenses.exceptions.CategoryNotFoundException;
 import com.tincho.expenses.model.Category;
 import com.tincho.expenses.model.Tenant;
 import com.tincho.expenses.repositories.CategoryRepository;
-import java.time.OffsetDateTime;
-import java.util.List;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jdbc.core.mapping.AggregateReference;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -40,8 +46,18 @@ public class CategoryService {
         return repository.findByTenantId(tenantId);
     }
 
+    public Page<Category> listForTenant(Long tenantId, Pageable pageable) {
+        List<Category> content = repository.findByTenantIdPaged(tenantId, pageable.getPageSize(), pageable.getOffset());
+        long total = repository.countByTenantId(tenantId);
+        return new PageImpl<>(content, pageable, total);
+    }
+
     public List<Category> listAll() {
         return repository.findAll();
+    }
+
+    public Page<Category> listAll(Pageable pageable) {
+        return repository.findAll(pageable);
     }
 
     public Category getForTenant(Long tenantId, Long id) {
