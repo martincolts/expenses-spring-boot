@@ -16,6 +16,7 @@ import {
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
   Typography,
 } from '@mui/material'
@@ -99,11 +100,32 @@ function CategoryCard({
 export function CategoriesPage() {
   const [selected, setSelected] = useState<Category | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
-  const { data: categories = [], isLoading, isError } = useQuery({
-    queryKey: ['categories'],
-    queryFn: fetchCategories,
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(20)
+
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['categories', { page, rowsPerPage }],
+    queryFn: () => fetchCategories(page, rowsPerPage),
   })
+
+  const categories = data?.content ?? []
+  const totalElements = data?.totalElements ?? 0
+
   const { mutate: deleteCategory } = useDeleteCategory()
+
+  const handleRowsPerPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(e.target.value))
+    setPage(0)
+  }
+
+  const paginationProps = {
+    count: totalElements,
+    page,
+    onPageChange: (_: unknown, newPage: number) => setPage(newPage),
+    rowsPerPage,
+    onRowsPerPageChange: handleRowsPerPageChange,
+    rowsPerPageOptions: [10, 20, 50],
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
@@ -129,7 +151,7 @@ export function CategoriesPage() {
           category={selected ?? undefined}
         />
 
-        {isLoading && (
+        {isPending && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
             <CircularProgress />
           </Box>
@@ -139,25 +161,26 @@ export function CategoriesPage() {
           <Typography color="error">Failed to load categories.</Typography>
         )}
 
-        {!isLoading && !isError && categories.length === 0 && (
+        {!isPending && !isError && categories.length === 0 && (
           <Box sx={{ py: 8, textAlign: 'center' }}>
             <Typography color="text.secondary">No categories yet.</Typography>
           </Box>
         )}
 
         {/* Mobile card list */}
-        {!isLoading && categories.length > 0 && (
+        {!isPending && categories.length > 0 && (
           <Box sx={{ display: { xs: 'block', md: 'none' } }}>
             <Stack spacing={1.5}>
               {categories.map(c => (
                 <CategoryCard key={c.id} category={c} onDelete={deleteCategory} onClick={setSelected} />
               ))}
             </Stack>
+            <TablePagination component="div" {...paginationProps} sx={{ mt: 1 }} />
           </Box>
         )}
 
         {/* Desktop table */}
-        {!isLoading && categories.length > 0 && (
+        {!isPending && categories.length > 0 && (
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
             <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
               <Table>
@@ -195,6 +218,7 @@ export function CategoriesPage() {
                   ))}
                 </TableBody>
               </Table>
+              <TablePagination component="div" {...paginationProps} />
             </TableContainer>
           </Box>
         )}

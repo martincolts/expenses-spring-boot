@@ -1,10 +1,11 @@
 import { apiFetch } from './client'
 import type { Category, CreateCategoryRequest, UpdateCategoryRequest } from '../types/category'
+import type { Page } from '../types/page'
 
 const BASE = '/api/categories'
 
-export async function fetchCategories(): Promise<Category[]> {
-  const res = await apiFetch(BASE)
+export async function fetchCategories(page: number, size: number): Promise<Page<Category>> {
+  const res = await apiFetch(`${BASE}?page=${page}&size=${size}`)
   if (!res.ok) throw new Error('Failed to fetch categories')
   return res.json()
 }

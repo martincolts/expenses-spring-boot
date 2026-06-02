@@ -98,15 +98,18 @@ function formatCurrency(amount: number) {
 }
 
 export function HomePage() {
-  const { data: expenses = [], isLoading: loadingExpenses } = useQuery({
-    queryKey: ['expenses'],
-    queryFn: fetchExpenses,
+  const { data: expensesPage, isLoading: loadingExpenses } = useQuery({
+    queryKey: ['expenses', { page: 0, rowsPerPage: 100 }],
+    queryFn: () => fetchExpenses(0, 100),
   })
 
-  const { data: incomes = [], isLoading: loadingIncomes } = useQuery({
-    queryKey: ['incomes'],
-    queryFn: fetchIncomes,
+  const { data: incomesPage, isLoading: loadingIncomes } = useQuery({
+    queryKey: ['incomes', { page: 0, rowsPerPage: 100 }],
+    queryFn: () => fetchIncomes(0, 100),
   })
+
+  const expenses = expensesPage?.content ?? []
+  const incomes = incomesPage?.content ?? []
 
   const totalExpenses = useMemo(
     () => expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0),

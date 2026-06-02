@@ -1,10 +1,11 @@
 import { apiFetch } from './client'
 import type { CreateExpenseRequest, Expense, UpdateExpenseRequest } from '../types/expense'
+import type { Page } from '../types/page'
 
 const BASE = '/api/expenses'
 
-export async function fetchExpenses(): Promise<Expense[]> {
-  const res = await apiFetch(BASE)
+export async function fetchExpenses(page: number, size: number): Promise<Page<Expense>> {
+  const res = await apiFetch(`${BASE}?page=${page}&size=${size}`)
   if (!res.ok) throw new Error('Failed to fetch expenses')
   return res.json()
 }

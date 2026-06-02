@@ -1,10 +1,11 @@
 import { apiFetch } from './client'
 import type { CreateIncomeRequest, Income, UpdateIncomeRequest } from '../types/expense'
+import type { Page } from '../types/page'
 
 const BASE = '/api/incomes'
 
-export async function fetchIncomes(): Promise<Income[]> {
-  const res = await apiFetch(BASE)
+export async function fetchIncomes(page: number, size: number): Promise<Page<Income>> {
+  const res = await apiFetch(`${BASE}?page=${page}&size=${size}`)
   if (!res.ok) throw new Error('Failed to fetch incomes')
   return res.json()
 }

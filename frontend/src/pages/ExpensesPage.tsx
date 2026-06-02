@@ -16,6 +16,7 @@ import {
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
   Typography,
   Paper,
@@ -32,7 +33,7 @@ function formatAmount(amount: string, currency: string) {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
 }
 
 function ExpenseCard({
@@ -87,11 +88,32 @@ function ExpenseCard({
 export function ExpensesPage() {
   const [selected, setSelected] = useState<Expense | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
-  const { data: expenses = [], isLoading, isError } = useQuery({
-    queryKey: ['expenses'],
-    queryFn: fetchExpenses,
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(20)
+
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['expenses', { page, rowsPerPage }],
+    queryFn: () => fetchExpenses(page, rowsPerPage),
   })
+
+  const expenses = data?.content ?? []
+  const totalElements = data?.totalElements ?? 0
+
   const { mutate: deleteExpense } = useDeleteExpense()
+
+  const handleRowsPerPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(e.target.value))
+    setPage(0)
+  }
+
+  const paginationProps = {
+    count: totalElements,
+    page,
+    onPageChange: (_: unknown, newPage: number) => setPage(newPage),
+    rowsPerPage,
+    onRowsPerPageChange: handleRowsPerPageChange,
+    rowsPerPageOptions: [10, 20, 50],
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
@@ -117,7 +139,7 @@ export function ExpensesPage() {
           expense={selected ?? undefined}
         />
 
-        {isLoading && (
+        {isPending && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
             <CircularProgress />
           </Box>
@@ -127,25 +149,26 @@ export function ExpensesPage() {
           <Typography color="error">Failed to load expenses.</Typography>
         )}
 
-        {!isLoading && !isError && expenses.length === 0 && (
+        {!isPending && !isError && expenses.length === 0 && (
           <Box sx={{ py: 8, textAlign: 'center' }}>
             <Typography color="text.secondary">No expenses yet.</Typography>
           </Box>
         )}
 
         {/* Mobile card list */}
-        {!isLoading && expenses.length > 0 && (
+        {!isPending && expenses.length > 0 && (
           <Box sx={{ display: { xs: 'block', md: 'none' } }}>
             <Stack spacing={1.5}>
               {expenses.map(e => (
                 <ExpenseCard key={e.id} expense={e} onDelete={deleteExpense} onClick={setSelected} />
               ))}
             </Stack>
+            <TablePagination component="div" {...paginationProps} sx={{ mt: 1 }} />
           </Box>
         )}
 
         {/* Desktop table */}
-        {!isLoading && expenses.length > 0 && (
+        {!isPending && expenses.length > 0 && (
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
             <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
               <Table>
@@ -190,6 +213,7 @@ export function ExpensesPage() {
                   ))}
                 </TableBody>
               </Table>
+              <TablePagination component="div" {...paginationProps} />
             </TableContainer>
           </Box>
         )}

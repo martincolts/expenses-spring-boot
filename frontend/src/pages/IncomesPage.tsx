@@ -16,6 +16,7 @@ import {
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
   Typography,
 } from '@mui/material'
@@ -31,7 +32,7 @@ function formatAmount(amount: string) {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
 }
 
 function IncomeCard({
@@ -73,11 +74,32 @@ function IncomeCard({
 export function IncomesPage() {
   const [selected, setSelected] = useState<Income | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
-  const { data: incomes = [], isLoading, isError } = useQuery({
-    queryKey: ['incomes'],
-    queryFn: fetchIncomes,
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(20)
+
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['incomes', { page, rowsPerPage }],
+    queryFn: () => fetchIncomes(page, rowsPerPage),
   })
+
+  const incomes = data?.content ?? []
+  const totalElements = data?.totalElements ?? 0
+
   const { mutate: deleteIncome } = useDeleteIncome()
+
+  const handleRowsPerPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(e.target.value))
+    setPage(0)
+  }
+
+  const paginationProps = {
+    count: totalElements,
+    page,
+    onPageChange: (_: unknown, newPage: number) => setPage(newPage),
+    rowsPerPage,
+    onRowsPerPageChange: handleRowsPerPageChange,
+    rowsPerPageOptions: [10, 20, 50],
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
@@ -103,7 +125,7 @@ export function IncomesPage() {
           income={selected ?? undefined}
         />
 
-        {isLoading && (
+        {isPending && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
             <CircularProgress />
           </Box>
@@ -113,25 +135,26 @@ export function IncomesPage() {
           <Typography color="error">Failed to load incomes.</Typography>
         )}
 
-        {!isLoading && !isError && incomes.length === 0 && (
+        {!isPending && !isError && incomes.length === 0 && (
           <Box sx={{ py: 8, textAlign: 'center' }}>
             <Typography color="text.secondary">No incomes yet.</Typography>
           </Box>
         )}
 
         {/* Mobile card list */}
-        {!isLoading && incomes.length > 0 && (
+        {!isPending && incomes.length > 0 && (
           <Box sx={{ display: { xs: 'block', md: 'none' } }}>
             <Stack spacing={1.5}>
               {incomes.map(i => (
                 <IncomeCard key={i.id} income={i} onDelete={deleteIncome} onClick={setSelected} />
               ))}
             </Stack>
+            <TablePagination component="div" {...paginationProps} sx={{ mt: 1 }} />
           </Box>
         )}
 
         {/* Desktop table */}
-        {!isLoading && incomes.length > 0 && (
+        {!isPending && incomes.length > 0 && (
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
             <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
               <Table>
@@ -167,6 +190,7 @@ export function IncomesPage() {
                   ))}
                 </TableBody>
               </Table>
+              <TablePagination component="div" {...paginationProps} />
             </TableContainer>
           </Box>
         )}
