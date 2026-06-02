@@ -115,14 +115,13 @@ export function AppShell({ children }: AppShellProps) {
           </IconButton>
           <Stack
             direction="row"
-            sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1 }}
+            sx={{ flexGrow: 1, alignItems: 'center', gap: 1 }}
           >
             <SpendlyLogo size={28} />
-            <Typography variant="h6" color="primary.main" sx={{ fontWeight: 700 }}>
+            <Typography variant="h6" color="primary.main" sx={{ fontWeight: 700, display: { xs: 'block', md: 'none' } }}>
               Spendly
             </Typography>
           </Stack>
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'block' } }} />
           <IconButton size="large" onClick={e => setAnchorEl(e.currentTarget)}>
             <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main', fontSize: 14 }}>
               {user?.name?.[0]?.toUpperCase()}
