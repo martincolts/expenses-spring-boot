@@ -30,7 +30,8 @@ public class DashboardService {
                 """
                 SELECT c.id AS category_id,
                        COALESCE(c.name, 'Uncategorized') AS category_name,
-                       SUM(e.amount) AS total
+                       SUM(e.amount) AS total,
+                       c.color_id
                 FROM expense e
                 LEFT JOIN category c ON e.category_id = c.id
                 WHERE e.tenant_id = :tenantId
@@ -43,7 +44,8 @@ public class DashboardService {
                 (rs, i) -> new CategoryExpenseTotal(
                         rs.getLong("category_id"),
                         rs.getString("category_name"),
-                        rs.getBigDecimal("total")));
+                        rs.getBigDecimal("total"),
+                        rs.getString("color_id")));
 
         BigDecimal totalExpenses = byCategory.stream()
                 .map(CategoryExpenseTotal::total)

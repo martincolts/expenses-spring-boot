@@ -33,14 +33,10 @@ import {
   Legend,
 } from 'recharts'
 import { fetchDashboard } from '../api/dashboard'
+import { getCategoryColor } from '../constants/categoryColors'
 
 const MONTH_LABELS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December']
-
-const CHART_COLORS = [
-  '#1976d2', '#42a5f5', '#66bb6a', '#ffa726', '#ef5350',
-  '#ab47bc', '#26c6da', '#d4e157', '#ff7043', '#8d6e63',
-]
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount)
@@ -205,10 +201,10 @@ export function HomePage() {
   const daysLeft = data?.daysUntilEndOfMonth ?? 0
   const dailyBudget = parseFloat(data?.dailyRemainingBudget ?? '0')
 
-  const chartData = (data?.expensesByCategory ?? []).map((c, i) => ({
+  const chartData = (data?.expensesByCategory ?? []).map((c) => ({
     name: c.categoryName,
     amount: parseFloat(c.total),
-    color: CHART_COLORS[i % CHART_COLORS.length],
+    color: getCategoryColor(c.colorId),
   }))
 
   return (

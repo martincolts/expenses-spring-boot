@@ -4,6 +4,7 @@ export interface CategoryExpenseTotal {
   categoryId: number
   categoryName: string
   total: string
+  colorId?: string
 }
 
 export interface DashboardData {
