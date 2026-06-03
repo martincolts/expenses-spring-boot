@@ -1,10 +1,11 @@
 # Stage 1: build frontend
 FROM node:22-alpine AS frontend-build
 WORKDIR /app
-COPY frontend/package.json frontend/package-lock.json* frontend/pnpm-lock.yaml* ./
-RUN npm install --legacy-peer-deps
+RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 COPY frontend/ .
-RUN npm run build
+RUN pnpm run build
 
 # Stage 2: build backend (embed pre-built frontend dist)
 FROM eclipse-temurin:26-jdk AS backend-build

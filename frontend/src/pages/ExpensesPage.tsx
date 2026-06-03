@@ -491,7 +491,7 @@ export function ExpensesPage() {
                         />
                       </TableCell>
                       <TableCell align="right">
-                        <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                        <Stack direction="row" sx={{ justifyContent: 'flex-end' }} spacing={0.5}>
                           {e.status === 'PENDING' && (
                             <Tooltip title="Mark as paid">
                               <IconButton
