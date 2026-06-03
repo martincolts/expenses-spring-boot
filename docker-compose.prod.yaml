@@ -36,13 +36,22 @@ services:
     networks:
       - internal
 
-  caddy:
-    image: caddy:2-alpine
-    ports:
-      - "3030:3030"
+  tailscale:
+    image: tailscale/tailscale:latest
+    hostname: expenses
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TS_HOSTNAME: expenses
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_STATE_DIR: /var/lib/tailscale
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
+      - ./tailscale-serve.json:/config/serve.json:ro
+      - tailscale_data:/var/lib/tailscale
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    devices:
+      - /dev/net/tun:/dev/net/tun
     depends_on:
       - backend
     restart: unless-stopped
@@ -55,4 +64,4 @@ networks:
 
 volumes:
   postgres_data:
-  caddy_data:
+  tailscale_data:
