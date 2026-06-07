@@ -38,7 +38,6 @@ services:
 
   tailscale:
     image: tailscale/tailscale:latest
-    hostname: expenses
     environment:
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_HOSTNAME: expenses
