@@ -111,6 +111,8 @@ export function AppShell({ children }: AppShellProps) {
         variant="permanent"
         sx={{
           display: { xs: 'none', md: 'block' },
+          width: { md: DRAWER_WIDTH },
+          flexShrink: 0,
           '& .MuiDrawer-paper': { width: DRAWER_WIDTH, boxSizing: 'border-box' },
         }}
         open
@@ -123,7 +125,7 @@ export function AppShell({ children }: AppShellProps) {
         component="main"
         sx={{
           flexGrow: 1,
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          minWidth: 0,
           mb: { xs: '56px', md: 0 },
           minHeight: '100vh',
           bgcolor: 'grey.50',
