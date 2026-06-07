@@ -1,14 +1,12 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  AppBar,
   Avatar,
   BottomNavigation,
   BottomNavigationAction,
   Box,
   Divider,
   Drawer,
-  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -17,7 +15,6 @@ import {
   Menu,
   MenuItem,
   Paper,
-  Stack,
   Toolbar,
   Typography,
 } from '@mui/material'
@@ -25,7 +22,6 @@ import DashboardIcon from '@mui/icons-material/Dashboard'
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'
 import SavingsIcon from '@mui/icons-material/Savings'
 import LabelIcon from '@mui/icons-material/Label'
-import MenuIcon from '@mui/icons-material/Menu'
 import { useAuthContext } from '../contexts/AuthContext'
 import { SpendlyLogo } from './SpendlyLogo'
 
@@ -43,7 +39,6 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const { user, logout } = useAuthContext()
   const navigate = useNavigate()
@@ -71,7 +66,7 @@ export function AppShell({ children }: AppShellProps) {
           <ListItem key={path} disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton
               selected={location.pathname === path}
-              onClick={() => { navigate(path); setMobileDrawerOpen(false) }}
+              onClick={() => navigate(path)}
               sx={{ borderRadius: 2 }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}>{icon}</ListItemIcon>
@@ -81,79 +76,36 @@ export function AppShell({ children }: AppShellProps) {
         ))}
       </List>
       <Divider />
-      <Box sx={{ p: 2 }}>
-        <Typography variant="caption" color="text.secondary" noWrap>
-          {user?.name}
-        </Typography>
-        <Typography variant="caption" color="text.disabled" noWrap sx={{ display: 'block' }}>
-          {user?.email}
-        </Typography>
+      <Box sx={{ p: 1 }}>
+        <ListItemButton
+          onClick={e => setAnchorEl(e.currentTarget)}
+          sx={{ borderRadius: 2, gap: 1.5 }}
+        >
+          <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 13 }}>
+            {user?.name?.[0]?.toUpperCase()}
+          </Avatar>
+          <Box sx={{ overflow: 'hidden' }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>{user?.name}</Typography>
+            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+              {user?.email}
+            </Typography>
+          </Box>
+        </ListItemButton>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <MenuItem onClick={handleLogout}>Sign out</MenuItem>
+        </Menu>
       </Box>
     </Box>
   )
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      <AppBar
-        position="fixed"
-        elevation={0}
-        sx={{
-          zIndex: theme => theme.zIndex.drawer + 1,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          color: 'text.primary',
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            edge="start"
-            onClick={() => setMobileDrawerOpen(v => !v)}
-            sx={{ mr: 1, display: { md: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Stack
-            direction="row"
-            sx={{ flexGrow: 1, alignItems: 'center', gap: 1 }}
-          >
-            <SpendlyLogo size={28} />
-            <Typography variant="h6" color="primary.main" sx={{ fontWeight: 700, display: { xs: 'block', md: 'none' } }}>
-              Spendly
-            </Typography>
-          </Stack>
-          <IconButton size="large" onClick={e => setAnchorEl(e.currentTarget)}>
-            <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main', fontSize: 14 }}>
-              {user?.name?.[0]?.toUpperCase()}
-            </Avatar>
-          </IconButton>
-          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-            <MenuItem disabled sx={{ opacity: '1 !important' }}>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>{user?.name}</Typography>
-                <Typography variant="caption" color="text.secondary">{user?.email}</Typography>
-              </Box>
-            </MenuItem>
-            <Divider />
-            <MenuItem onClick={handleLogout}>Sign out</MenuItem>
-          </Menu>
-        </Toolbar>
-      </AppBar>
-
-      {/* Mobile temporary drawer */}
-      <Drawer
-        variant="temporary"
-        open={mobileDrawerOpen}
-        onClose={() => setMobileDrawerOpen(false)}
-        ModalProps={{ keepMounted: true }}
-        sx={{
-          display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { width: DRAWER_WIDTH },
-        }}
-      >
-        {drawerContent}
-      </Drawer>
-
       {/* Desktop permanent drawer */}
       <Drawer
         variant="permanent"
@@ -172,9 +124,8 @@ export function AppShell({ children }: AppShellProps) {
         sx={{
           flexGrow: 1,
           width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          mt: '64px',
           mb: { xs: '56px', md: 0 },
-          minHeight: 'calc(100vh - 64px)',
+          minHeight: '100vh',
           bgcolor: 'grey.50',
         }}
       >
