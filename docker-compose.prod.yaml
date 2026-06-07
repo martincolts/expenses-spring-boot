@@ -52,11 +52,10 @@ services:
       - SYS_MODULE
     devices:
       - /dev/net/tun:/dev/net/tun
+    network_mode: "service:backend"
     depends_on:
       - backend
     restart: unless-stopped
-    networks:
-      - internal
 
 networks:
   internal:
