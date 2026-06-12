@@ -3,6 +3,8 @@ package com.tincho.expenses.controllers;
 import com.tincho.expenses.controllers.dto.CreateTenantRequest;
 import com.tincho.expenses.controllers.dto.LoginRequest;
 import com.tincho.expenses.controllers.dto.LoginResponse;
+import com.tincho.expenses.controllers.dto.RefreshRequest;
+import com.tincho.expenses.controllers.dto.RefreshResponse;
 import com.tincho.expenses.controllers.dto.ResetPasswordRequest;
 import com.tincho.expenses.security.TenantUserDetails;
 import com.tincho.expenses.services.AuthService;
@@ -32,6 +34,11 @@ public class AuthController {
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest req) {
         return authService.login(req);
+    }
+
+    @PostMapping("/refresh")
+    public RefreshResponse refresh(@Valid @RequestBody RefreshRequest req) {
+        return authService.refresh(req);
     }
 
     @PostMapping("/reset-password")

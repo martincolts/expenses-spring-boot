@@ -1,5 +1,6 @@
 package com.tincho.expenses.services;
 
+import io.jsonwebtoken.JwtException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -8,8 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.tincho.expenses.controllers.dto.CreateTenantRequest;
 import com.tincho.expenses.controllers.dto.LoginRequest;
 import com.tincho.expenses.controllers.dto.LoginResponse;
+import com.tincho.expenses.controllers.dto.RefreshRequest;
+import com.tincho.expenses.controllers.dto.RefreshResponse;
 import com.tincho.expenses.controllers.dto.ResetPasswordRequest;
 import com.tincho.expenses.exceptions.InvalidCurrentPasswordException;
+import com.tincho.expenses.exceptions.InvalidRefreshTokenException;
 import com.tincho.expenses.exceptions.TenantNotFoundException;
 import com.tincho.expenses.model.Tenant;
 import com.tincho.expenses.repositories.TenantRepository;
@@ -29,9 +33,7 @@ public class AuthService {
 
     public LoginResponse register(CreateTenantRequest req) {
         Tenant saved = tenantService.create(req);
-        TenantUserDetails userDetails = new TenantUserDetails(saved);
-        String token = jwtService.generateToken(userDetails);
-        return new LoginResponse(token, saved.id(), saved.name(), saved.email(), saved.role());
+        return buildLoginResponse(saved);
     }
 
     public LoginResponse login(LoginRequest req) {
@@ -40,9 +42,27 @@ public class AuthService {
         if (!passwordEncoder.matches(req.password(), tenant.passwordHash())) {
             throw new BadCredentialsException("Invalid credentials");
         }
+        return buildLoginResponse(tenant);
+    }
+
+    public RefreshResponse refresh(RefreshRequest req) {
+        String email;
+        try {
+            email = jwtService.extractRefreshSubject(req.refreshToken());
+        } catch (JwtException e) {
+            throw new InvalidRefreshTokenException();
+        }
+        Tenant tenant = tenantRepository.findByEmail(email)
+                .orElseThrow(InvalidRefreshTokenException::new);
+        String token = jwtService.generateToken(new TenantUserDetails(tenant));
+        return new RefreshResponse(token);
+    }
+
+    private LoginResponse buildLoginResponse(Tenant tenant) {
         TenantUserDetails userDetails = new TenantUserDetails(tenant);
         String token = jwtService.generateToken(userDetails);
-        return new LoginResponse(token, tenant.id(), tenant.name(), tenant.email(), tenant.role());
+        String refreshToken = jwtService.generateRefreshToken(userDetails);
+        return new LoginResponse(token, refreshToken, tenant.id(), tenant.name(), tenant.email(), tenant.role());
     }
 
     @Transactional

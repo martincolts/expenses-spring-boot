@@ -127,6 +127,7 @@ Creates a new account with the `TENANT` role and returns a JWT.
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
   "id": 1,
   "name": "Acme Corp",
   "email": "acme@example.com",
@@ -173,6 +174,7 @@ Authenticates with email and password, returns a JWT.
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
   "id": 1,
   "name": "Acme Corp",
   "email": "acme@example.com",
@@ -194,6 +196,53 @@ curl -s -X POST http://localhost:8080/api/auth/login \
 |---|---|
 | `400` | Validation failed |
 | `401` | Wrong email or password |
+
+The returned `refreshToken` is a long-lived token (default 30 days) used to obtain a new access `token` once the access token expires — see [Refresh](#refresh).
+
+---
+
+#### Refresh
+
+```
+POST /api/auth/refresh
+```
+
+Exchanges a valid refresh token for a new short-lived access token. Used by the client to transparently recover from an expired access token without forcing the user to log in again. No `Authorization` header is required — the refresh token travels in the body.
+
+**Request body**
+
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+| Field | Type | Constraints |
+|---|---|---|
+| `refreshToken` | string | required |
+
+**Response — `200 OK`**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+**Example**
+
+```bash
+curl -s -X POST http://localhost:8080/api/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refreshToken":"eyJhbGciOiJIUzI1NiJ9..."}'
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `400` | Validation failed (missing `refreshToken`) |
+| `401` | Refresh token is invalid, expired, or not a refresh token |
 
 ---
 

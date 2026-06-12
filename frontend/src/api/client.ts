@@ -21,11 +21,21 @@ export function getToken(): string | null {
   }
 }
 
-async function doRefresh(currentToken: string): Promise<string | null> {
+export function getRefreshToken(): string | null {
+  try {
+    const raw = localStorage.getItem('auth')
+    return raw ? JSON.parse(raw).refreshToken : null
+  } catch {
+    return null
+  }
+}
+
+async function doRefresh(refreshToken: string): Promise<string | null> {
   try {
     const res = await fetch('/api/auth/refresh', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${currentToken}` },
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
     })
     if (!res.ok) return null
     const data = await res.json()
@@ -36,7 +46,7 @@ async function doRefresh(currentToken: string): Promise<string | null> {
 }
 
 async function attemptRefresh(): Promise<string | null> {
-  const current = getToken()
+  const current = getRefreshToken()
   if (!current) return null
 
   if (isRefreshing) {

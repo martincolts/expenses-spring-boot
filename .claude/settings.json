@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew compileJava -q)",
+      "Bash(npm run *)",
+      "Bash(docker info *)",
+      "Bash(./gradlew test *)",
+      "Bash(git stash *)"
+    ]
+  }
+}

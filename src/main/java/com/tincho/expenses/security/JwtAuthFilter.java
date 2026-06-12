@@ -35,6 +35,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         Claims claims = jwtService.extractAllClaims(token);
+        // Refresh tokens are only valid at /api/auth/refresh, never as bearer access tokens
+        if ("refresh".equals(claims.get("type", String.class))) {
+            chain.doFilter(request, response);
+            return;
+        }
         // JJWT deserializes numbers as Integer for small values; use Number to be safe
         Number idNum = claims.get("id", Number.class);
         Long id = idNum != null ? idNum.longValue() : null;

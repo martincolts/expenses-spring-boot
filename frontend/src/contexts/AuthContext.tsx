@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function login(data: AuthResponse) {
     const u: AuthUser = {
       token: data.token,
+      refreshToken: data.refreshToken,
       id: data.id,
       name: data.name,
       email: data.email,
