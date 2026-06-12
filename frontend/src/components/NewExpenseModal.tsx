@@ -53,7 +53,7 @@ export function NewExpenseModal({ open, onClose, expense }: Props) {
     initialValues: {
       description: expense?.description ?? '',
       amount: expense?.amount ?? '',
-      currency: expense?.currency ?? 'USD',
+      currency: expense?.currency ?? 'ARS',
       incurredAt: expense?.incurredAt
         ? expense.incurredAt.slice(0, 10)
         : new Date().toISOString().slice(0, 10),
@@ -66,7 +66,7 @@ export function NewExpenseModal({ open, onClose, expense }: Props) {
         categoryId: values.categoryId === '' ? null : values.categoryId,
         description: values.description,
         amount: parseFloat(values.amount as string),
-        currency: values.currency || 'ARS',
+        currency: values.currency,
         incurredAt: new Date(values.incurredAt).toISOString(),
         paid: values.paid,
       }
