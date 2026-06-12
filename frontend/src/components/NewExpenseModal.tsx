@@ -66,7 +66,7 @@ export function NewExpenseModal({ open, onClose, expense }: Props) {
         categoryId: values.categoryId === '' ? null : values.categoryId,
         description: values.description,
         amount: parseFloat(values.amount as string),
-        currency: values.currency,
+        currency: values.currency || 'ARS',
         incurredAt: new Date(values.incurredAt).toISOString(),
         paid: values.paid,
       }
