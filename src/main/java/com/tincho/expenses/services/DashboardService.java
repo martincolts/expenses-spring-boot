@@ -22,7 +22,7 @@ public class DashboardService {
 
     public DashboardResponse getForTenant(Long tenantId, int year, int month) {
         var dateFrom = OffsetDateTime.of(year, month, 1, 0, 0, 0, 0, ZoneOffset.UTC);
-        var dateTo = dateFrom.plusMonths(1).minusNanos(1);
+        var dateTo = dateFrom.plusMonths(1);
 
         var params = Map.of("tenantId", tenantId, "dateFrom", dateFrom, "dateTo", dateTo);
 
@@ -36,7 +36,7 @@ public class DashboardService {
                 LEFT JOIN category c ON e.category_id = c.id
                 WHERE e.tenant_id = :tenantId
                   AND e.incurred_at >= :dateFrom
-                  AND e.incurred_at <= :dateTo
+                  AND e.incurred_at < :dateTo
                 GROUP BY c.id, c.name
                 ORDER BY total DESC
                 """,
@@ -57,7 +57,7 @@ public class DashboardService {
                 FROM income
                 WHERE tenant_id = :tenantId
                   AND created_at >= :dateFrom
-                  AND created_at <= :dateTo
+                  AND created_at < :dateTo
                 """,
                 params,
                 BigDecimal.class);
