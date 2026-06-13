@@ -18,6 +18,19 @@ export interface AuthResponse {
   role: string
 }
 
+export interface ForgotPasswordRequest {
+  email: string
+}
+
+export interface ForgotPasswordResponse {
+  resetUrl: string | null
+}
+
+export interface ConfirmResetPasswordRequest {
+  token: string
+  newPassword: string
+}
+
 export interface AuthUser {
   token: string
   refreshToken: string

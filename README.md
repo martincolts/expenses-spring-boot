@@ -289,6 +289,96 @@ curl -s -X POST http://localhost:8080/api/auth/reset-password \
 
 ---
 
+#### Forgot password
+
+```
+POST /api/auth/forgot-password
+```
+
+Starts the password-recovery flow for a user who is **not** logged in. No `Authorization` header is required. Generates a single-use, time-limited reset token, persists it (with the full reset URL) in the `password_reset_token` table, and invalidates any previously issued unused tokens for that user.
+
+> **Note:** No email is sent yet. The reset URL is stored in the database and, for now, also returned in the response so it can be used directly. The response is intentionally generic (and `resetUrl` is `null`) when no account matches the email, so the endpoint does not reveal whether an email is registered.
+
+**Request body**
+
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+| Field | Type | Constraints |
+|---|---|---|
+| `email` | string | required, valid email |
+
+**Response — `200 OK`**
+
+```json
+{
+  "resetUrl": "http://localhost:5173/reset-password?token=4f1c…"
+}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `resetUrl` | string \| null | Reset URL when the email matches a user; `null` otherwise |
+
+**Example**
+
+```bash
+curl -s -X POST http://localhost:8080/api/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com"}'
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `400` | Validation failed |
+
+---
+
+#### Confirm password reset
+
+```
+POST /api/auth/confirm-reset-password
+```
+
+Completes the password-recovery flow using a token from a reset URL. No `Authorization` header is required. The token must exist, be unused, and not be expired. On success the user's password is updated and the token is marked used (single-use).
+
+**Request body**
+
+```json
+{
+  "token": "4f1c…",
+  "newPassword": "evenmoresecret"
+}
+```
+
+| Field | Type | Constraints |
+|---|---|---|
+| `token` | string | required |
+| `newPassword` | string | required, 8–255 chars |
+
+**Response — `204 No Content`**
+
+**Example**
+
+```bash
+curl -s -X POST http://localhost:8080/api/auth/confirm-reset-password \
+  -H "Content-Type: application/json" \
+  -d '{"token":"4f1c…","newPassword":"evenmoresecret"}'
+```
+
+**Errors**
+
+| Status | Reason |
+|---|---|
+| `400` | Validation failed, or token is invalid / expired / already used |
+
+---
+
 ### Tenants
 
 All tenant endpoints require a valid JWT. Access is role-restricted as described below.

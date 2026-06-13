@@ -1,6 +1,9 @@
 package com.tincho.expenses.controllers;
 
+import com.tincho.expenses.controllers.dto.ConfirmResetPasswordRequest;
 import com.tincho.expenses.controllers.dto.CreateTenantRequest;
+import com.tincho.expenses.controllers.dto.ForgotPasswordRequest;
+import com.tincho.expenses.controllers.dto.ForgotPasswordResponse;
 import com.tincho.expenses.controllers.dto.LoginRequest;
 import com.tincho.expenses.controllers.dto.LoginResponse;
 import com.tincho.expenses.controllers.dto.RefreshRequest;
@@ -46,5 +49,16 @@ public class AuthController {
     public void resetPassword(@Valid @RequestBody ResetPasswordRequest req,
                        @AuthenticationPrincipal TenantUserDetails principal) {
         authService.resetPassword(principal.getUsername(), req);
+    }
+
+    @PostMapping("/forgot-password")
+    public ForgotPasswordResponse forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
+        return authService.requestPasswordReset(req);
+    }
+
+    @PostMapping("/confirm-reset-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void confirmResetPassword(@Valid @RequestBody ConfirmResetPasswordRequest req) {
+        authService.confirmResetPassword(req);
     }
 }

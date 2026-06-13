@@ -7,6 +7,7 @@ import com.tincho.expenses.exceptions.ExpenseNotFoundException;
 import com.tincho.expenses.exceptions.ExpenseNotPaidException;
 import com.tincho.expenses.exceptions.IncomeNotFoundException;
 import com.tincho.expenses.exceptions.InvalidCurrentPasswordException;
+import com.tincho.expenses.exceptions.InvalidPasswordResetTokenException;
 import com.tincho.expenses.exceptions.InvalidRefreshTokenException;
 import com.tincho.expenses.exceptions.TenantEmailAlreadyExistsException;
 import com.tincho.expenses.exceptions.TenantNotFoundException;
@@ -83,6 +84,11 @@ class ApiExceptionHandler {
     @ExceptionHandler(InvalidRefreshTokenException.class)
     ProblemDetail invalidRefreshToken(InvalidRefreshTokenException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    ProblemDetail invalidPasswordResetToken(InvalidPasswordResetTokenException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)

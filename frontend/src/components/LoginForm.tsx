@@ -1,7 +1,7 @@
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
-import { Alert, Box, Button, Stack, TextField } from '@mui/material'
-import { useNavigate } from 'react-router-dom'
+import { Alert, Box, Button, Link, Stack, TextField } from '@mui/material'
+import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { useLogin } from '../hooks/useAuth'
 import { useAuthContext } from '../contexts/AuthContext'
 
@@ -64,6 +64,9 @@ export function LoginForm() {
         >
           {isPending ? 'Signing in…' : 'Sign In'}
         </Button>
+        <Link component={RouterLink} to="/forgot-password" variant="body2" align="center">
+          Forgot password?
+        </Link>
       </Stack>
     </Box>
   )

@@ -23,3 +23,6 @@ app:
     name: ${ADMIN_NAME:Administrator}
     email: ${ADMIN_EMAIL:admin@example.com}
     password: ${ADMIN_PASSWORD:adminpassword}
+  password-reset:
+    base-url: ${PASSWORD_RESET_BASE_URL:http://localhost:5173/reset-password}
+    expiration-ms: ${PASSWORD_RESET_EXPIRATION_MS:3600000}
