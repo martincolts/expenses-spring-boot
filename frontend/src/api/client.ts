@@ -47,7 +47,10 @@ async function doRefresh(refreshToken: string): Promise<string | null> {
 
 async function attemptRefresh(): Promise<string | null> {
   const current = getRefreshToken()
-  if (!current) return null
+  if (!current) {
+    onUnauthenticated?.()
+    return null
+  }
 
   if (isRefreshing) {
     return new Promise(resolve => { refreshQueue.push(resolve) })
@@ -84,6 +87,9 @@ export async function apiFetch(url: string, init: RequestInit = {}): Promise<Res
         ...init,
         headers: { ...headers, Authorization: `Bearer ${newToken}` },
       })
+      if (res.status === 401) {
+        onUnauthenticated?.()
+      }
     }
   }
 
