@@ -54,7 +54,7 @@ tasks.named('test') {
 
 task buildFrontend(type: Exec) {
 	workingDir 'frontend'
-	commandLine 'npm', 'run', 'build'
+	commandLine 'pnpm', 'run', 'build'
 	inputs.dir 'frontend/src'
 	inputs.files 'frontend/package.json', 'frontend/vite.config.ts', 'frontend/tsconfig.json'
 	outputs.dir 'frontend/dist'

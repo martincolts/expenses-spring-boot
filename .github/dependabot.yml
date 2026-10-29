@@ -1,0 +1,52 @@
+version: 2
+
+updates:
+  # Backend: Spring Boot, Flyway, Lombok, Testcontainers, etc.
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      gradle-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # Frontend: React, MUI, TanStack Query, Vite (pnpm lockfile)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      frontend-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # Base images in Dockerfile (node, eclipse-temurin)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+
+  # Images in docker-compose.yaml / docker-compose.prod.yaml
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    ignore:
+      # A Postgres major upgrade needs a dump/restore of the data volume
+      - dependency-name: "postgres"
+        update-types: ["version-update:semver-major"]
+
+  # Actions used in .github/workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      github-actions:
+        patterns: ["*"]
